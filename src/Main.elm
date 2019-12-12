@@ -3,22 +3,30 @@ module Main exposing (main)
 import Browser
 import Html exposing (Html, div, img, text)
 import Html.Attributes exposing (class)
+import Html.Events exposing (onClick)
 
 
 type Msg
-    = Noop
+    = Click Interactor
 
 
 type alias Flags =
     {}
 
 
-type Interactor
+type InteractorKind
     = One
     | Two
     | Three
     | Four
+    | Boom
     | Arrow Direction
+
+
+type alias Interactor =
+    { id : Int
+    , kind : InteractorKind
+    }
 
 
 type Direction
@@ -58,34 +66,39 @@ viewCell mInteractor =
         Nothing ->
             div [ class "cell" ] []
 
-        Just interactor ->
-            case interactor of
-                One ->
-                    div [ class "cell interactor-one" ] []
+        Just ({ kind } as interactor) ->
+            div [ onClick (Click interactor), class <| "cell " ++ interactorClass kind ] []
 
-                Two ->
-                    div [ class "cell interactor-two" ] []
 
-                Three ->
-                    div [ class "cell interactor-three" ] []
+interactorClass : InteractorKind -> String
+interactorClass kind =
+    case kind of
+        One ->
+            "interactor-one"
 
-                Four ->
-                    div [ class "cell interactor-four" ] []
+        Two ->
+            "interactor-two"
 
-                _ ->
-                    div [ class "cell" ] [ text "INTERACTOR" ]
+        Three ->
+            "interactor-three"
+
+        Four ->
+            "interactor-four"
+
+        _ ->
+            ""
 
 
 initialBoard : Board
 initialBoard =
-    [ [ Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Just One, Nothing ]
-    , [ Nothing, Nothing, Nothing, Nothing, Just Three, Nothing, Nothing, Nothing ]
-    , [ Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Just Two, Nothing ]
-    , [ Nothing, Nothing, Nothing, Nothing, Nothing, Just Four, Nothing, Nothing ]
-    , [ Nothing, Nothing, Nothing, Nothing, Just Three, Nothing, Nothing, Nothing ]
-    , [ Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Just Two, Nothing ]
-    , [ Nothing, Nothing, Nothing, Nothing, Just Three, Nothing, Nothing, Nothing ]
-    , [ Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Just Two, Nothing ]
+    [ [ Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Just { id = 1, kind = One }, Nothing ]
+    , [ Nothing, Nothing, Nothing, Nothing, Just { id = 2, kind = Three }, Nothing, Nothing, Nothing ]
+    , [ Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Just { id = 3, kind = Two }, Nothing ]
+    , [ Nothing, Nothing, Nothing, Nothing, Nothing, Just { id = 4, kind = Four }, Nothing, Nothing ]
+    , [ Nothing, Nothing, Nothing, Nothing, Just { id = 5, kind = Three }, Nothing, Nothing, Nothing ]
+    , [ Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Just { id = 6, kind = Two }, Nothing ]
+    , [ Nothing, Just { id = 7, kind = Three }, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing ]
+    , [ Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Just { id = 8, kind = Two }, Nothing ]
     ]
 
 
@@ -99,7 +112,11 @@ init _ =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        _ ->
+        Click { id, kind } ->
+            let
+                _ =
+                    Debug.log "clicked a thing" ( id, kind )
+            in
             ( model, Cmd.none )
 
 
