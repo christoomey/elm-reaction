@@ -1,7 +1,7 @@
 module Main exposing (main)
 
 import Browser
-import Html exposing (Html, button, div, img, span, text)
+import Html exposing (Html, button, div, span, text)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import List.Extra as List
@@ -21,8 +21,6 @@ type InteractorKind
     | Two
     | Three
     | Four
-    | Boom
-    | Arrow Direction
 
 
 type alias Cell =
@@ -114,9 +112,6 @@ interactorClass kind =
 
         Four ->
             "interactor-four"
-
-        _ ->
-            ""
 
 
 initialBoard : Board
