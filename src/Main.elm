@@ -1,7 +1,7 @@
 module Main exposing (main)
 
 import Browser
-import Html exposing (Html, div, img, text)
+import Html exposing (Html, div, img, span, text)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import List.Extra as List
@@ -66,13 +66,34 @@ viewRow row =
 
 
 viewCell : Cell -> Html Msg
-viewCell ( mInteractor, _ ) =
+viewCell ( mInteractor, projectiles ) =
     case mInteractor of
         Nothing ->
-            div [ class "cell" ] []
+            div [ class "cell" ] <| List.map viewProjectile projectiles
 
         Just ({ kind } as interactor) ->
-            div [ onClick (Click interactor), class <| "cell " ++ interactorClass kind ] []
+            div [ onClick (Click interactor), class <| "cell " ++ interactorClass kind ] <| List.map viewProjectile projectiles
+
+
+viewProjectile : Projectile -> Html Msg
+viewProjectile projectile =
+    span [ class <| "projectile-" ++ directionToString projectile ] []
+
+
+directionToString : Projectile -> String
+directionToString projectile =
+    case projectile of
+        Projectile Up ->
+            "up"
+
+        Projectile Down ->
+            "down"
+
+        Projectile Left ->
+            "left"
+
+        Projectile Right ->
+            "right"
 
 
 interactorClass : InteractorKind -> String
@@ -96,14 +117,14 @@ interactorClass kind =
 
 initialBoard : Board
 initialBoard =
-    [ [ ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Just { id = 1, kind = One }, [] ), ( Nothing, [] ) ]
+    [ [ ( Nothing, [ Projectile Down ] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Just { id = 1, kind = One }, [] ), ( Nothing, [] ) ]
     , [ ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Just { id = 2, kind = Three }, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ) ]
-    , [ ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Just { id = 3, kind = Two }, [] ), ( Nothing, [] ) ]
+    , [ ( Nothing, [ Projectile Up ] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Just { id = 3, kind = Two }, [] ), ( Nothing, [] ) ]
     , [ ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Just { id = 4, kind = Four }, [] ), ( Nothing, [] ), ( Nothing, [] ) ]
     , [ ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Just { id = 5, kind = Three }, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ) ]
-    , [ ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Just { id = 6, kind = Two }, [] ), ( Nothing, [] ) ]
+    , [ ( Nothing, [ Projectile Right ] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Just { id = 6, kind = Two }, [] ), ( Nothing, [] ) ]
     , [ ( Nothing, [] ), ( Just { id = 7, kind = Three }, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ) ]
-    , [ ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Just { id = 8, kind = Two }, [] ), ( Nothing, [] ) ]
+    , [ ( Nothing, [ Projectile Left ] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Just { id = 8, kind = Two }, [] ), ( Nothing, [] ) ]
     ]
 
 

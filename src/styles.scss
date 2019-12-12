@@ -49,3 +49,27 @@ $cell-size: 150px;
     background-size: cover;
   }
 }
+
+.projectile-up, .projectile-down, .projectile-left, .projectile-right {
+  background: url(./assets/images/projectile.gif) no-repeat center center;
+  width: 100%;
+  height: 100%;
+}
+
+$projectile-scale: 0.3;
+
+.projectile-up {
+  transform: scale($projectile-scale);
+}
+
+.projectile-left {
+  transform: rotate(270deg) scale($projectile-scale);
+}
+
+.projectile-right {
+  transform: rotate(90deg) scale($projectile-scale);
+}
+
+.projectile-down {
+  transform: rotate(180deg) scale($projectile-scale);
+}
