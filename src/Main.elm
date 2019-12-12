@@ -78,10 +78,14 @@ viewCell mInteractor =
 
 initialBoard : Board
 initialBoard =
-    [ [ Nothing, Nothing, Just One, Nothing ]
-    , [ Just Three, Nothing, Nothing, Nothing ]
-    , [ Nothing, Nothing, Just Two, Nothing ]
-    , [ Nothing, Just Four, Nothing, Nothing ]
+    [ [ Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Just One, Nothing ]
+    , [ Nothing, Nothing, Nothing, Nothing, Just Three, Nothing, Nothing, Nothing ]
+    , [ Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Just Two, Nothing ]
+    , [ Nothing, Nothing, Nothing, Nothing, Nothing, Just Four, Nothing, Nothing ]
+    , [ Nothing, Nothing, Nothing, Nothing, Just Three, Nothing, Nothing, Nothing ]
+    , [ Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Just Two, Nothing ]
+    , [ Nothing, Nothing, Nothing, Nothing, Just Three, Nothing, Nothing, Nothing ]
+    , [ Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Just Two, Nothing ]
     ]
 
 

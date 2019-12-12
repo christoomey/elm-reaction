@@ -1,9 +1,9 @@
-$cell-size: 300px;
+$cell-size: 150px;
 
 .board {
   display: grid;
-  grid-template-columns: repeat(4, $cell-size);
-  grid-template-rows: repeat(4, $cell-size);
+  grid-template-columns: repeat(8, $cell-size);
+  grid-template-rows: repeat(8, $cell-size);
 }
 
 .cell {
