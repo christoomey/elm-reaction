@@ -4,6 +4,7 @@ import Browser
 import Html exposing (Html, div, img, text)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
+import List.Extra as List
 
 
 type Msg
@@ -114,10 +115,41 @@ update msg model =
     case msg of
         Click { id, kind } ->
             let
-                _ =
-                    Debug.log "clicked a thing" ( id, kind )
+                newInteractor : Interactor
+                newInteractor =
+                    case kind of
+                        One ->
+                            Interactor id Two
+
+                        Two ->
+                            Interactor id Three
+
+                        Three ->
+                            Interactor id Four
+
+                        _ ->
+                            Interactor id Boom
+
+                newBoard : Board
+                newBoard =
+                    List.map (updateInRow id newInteractor) model.board
             in
-            ( model, Cmd.none )
+            ( { model | board = newBoard }, Cmd.none )
+
+
+updateInRow : Int -> Interactor -> List (Maybe Interactor) -> List (Maybe Interactor)
+updateInRow id newInteractor row =
+    List.updateIf (interactorMatches id) (\_ -> Just newInteractor) row
+
+
+interactorMatches : Int -> Maybe Interactor -> Bool
+interactorMatches id mInteractor =
+    case mInteractor of
+        Nothing ->
+            False
+
+        Just interactor ->
+            id == interactor.id
 
 
 main : Program Flags Model Msg
