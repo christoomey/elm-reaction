@@ -8,8 +8,12 @@ import List.Extra as List
 
 
 type Msg
-    = Click Interactor
+    = Click Position
     | Tick
+
+
+type alias Position =
+    ( Int, Int )
 
 
 type alias Flags =
@@ -23,8 +27,14 @@ type InteractorKind
     | Four
 
 
-type alias Cell =
-    ( Maybe Interactor, List Projectile )
+
+-- type Interaction
+--     = Clicked Interactor
+--     | Collide Projectile Interactor
+
+
+type Positioned a
+    = Positioned Int Int a
 
 
 type alias Interactor =
@@ -45,36 +55,68 @@ type Projectile
 
 
 type alias Board =
-    List (List Cell)
+    { interactors : List (Positioned Interactor)
+    , projectiles : List (Positioned Projectile)
+    }
 
 
 type alias Model =
     { board : Board
-    , projectiles : List Projectile
+    , dimension : Int
     }
 
 
 view : Model -> Html Msg
-view { board } =
+view model =
     div []
-        [ div [ class "board" ] <| List.concatMap viewRow board
+        [ div [ class "board" ] <| renderableBoard model
         , button [ onClick Tick ] [ text "Tick" ]
         ]
 
 
-viewRow : List Cell -> List (Html Msg)
-viewRow row =
-    List.map viewCell row
+renderableBoard : Model -> List (Html Msg)
+renderableBoard model =
+    let
+        range =
+            List.range 0 <| model.dimension - 1
+    in
+    List.andThen (\x -> List.map (\y -> viewCell model.board ( x, y )) range) range
 
 
-viewCell : Cell -> Html Msg
-viewCell ( mInteractor, projectiles ) =
+viewCell : Board -> Position -> Html Msg
+viewCell board ( x, y ) =
+    let
+        mInteractor =
+            List.find (elementIsAtPosition ( x, y )) board.interactors
+
+        projectiles =
+            List.filter (elementIsAtPosition ( x, y )) board.projectiles
+
+        renderedProjectiles =
+            List.map (getPositionedElement >> viewProjectile) projectiles
+    in
     case mInteractor of
         Nothing ->
-            div [ class "cell" ] <| List.map viewProjectile projectiles
+            div [ class "cell" ] renderedProjectiles
 
-        Just ({ kind } as interactor) ->
-            div [ onClick (Click interactor), class <| "cell " ++ interactorClass kind ] <| List.map viewProjectile projectiles
+        Just (Positioned _ _ interactor) ->
+            div [ onClick (Click ( x, y )), class <| "cell " ++ interactorClass interactor.kind ] <| renderedProjectiles
+
+
+interactorClass : InteractorKind -> String
+interactorClass kind =
+    case kind of
+        One ->
+            "interactor-one"
+
+        Two ->
+            "interactor-two"
+
+        Three ->
+            "interactor-three"
+
+        Four ->
+            "interactor-four"
 
 
 viewProjectile : Projectile -> Html Msg
@@ -98,182 +140,182 @@ directionToString projectile =
             "right"
 
 
-interactorClass : InteractorKind -> String
-interactorClass kind =
-    case kind of
-        One ->
-            "interactor-one"
-
-        Two ->
-            "interactor-two"
-
-        Three ->
-            "interactor-three"
-
-        Four ->
-            "interactor-four"
-
-
 initialBoard : Board
 initialBoard =
-    [ [ ( Nothing, [ Projectile Down, Projectile Right ] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Just { id = 1, kind = One }, [] ), ( Nothing, [] ) ]
-    , [ ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Just { id = 2, kind = Three }, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ) ]
-    , [ ( Nothing, [ Projectile Up ] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Just { id = 3, kind = Two }, [] ), ( Nothing, [] ) ]
-    , [ ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Just { id = 4, kind = Four }, [] ), ( Nothing, [] ), ( Nothing, [] ) ]
-    , [ ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Just { id = 5, kind = Three }, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ) ]
-    , [ ( Nothing, [ Projectile Right ] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Just { id = 6, kind = Two }, [] ), ( Nothing, [] ) ]
-    , [ ( Nothing, [] ), ( Just { id = 7, kind = Three }, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ) ]
-    , [ ( Nothing, [ Projectile Left ] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Just { id = 8, kind = Two }, [] ), ( Nothing, [] ) ]
-    ]
+    { interactors =
+        [ Positioned 0 0 { id = 1, kind = One }
+        , Positioned 2 6 { id = 1, kind = Four }
+        , Positioned 7 7 { id = 2, kind = Three }
+        ]
+    , projectiles =
+        [ Positioned 2 2 (Projectile Right)
+        , Positioned 1 4 (Projectile Left)
+        , Positioned 4 2 (Projectile Down)
+        , Positioned 3 3 (Projectile Up)
+        ]
+    }
 
 
 init : Flags -> ( Model, Cmd Msg )
 init _ =
-    ( { board = initialBoard, projectiles = [] }
+    ( { board = initialBoard, dimension = 8 }
     , Cmd.none
     )
+
+
+elementIsAtPosition : Position -> Positioned a -> Bool
+elementIsAtPosition ( x, y ) (Positioned px py _) =
+    px == x && py == y
+
+
+getPositionedElement : Positioned a -> a
+getPositionedElement (Positioned _ _ a) =
+    a
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Click ({ id } as interactor) ->
+        Click ( x, y ) ->
             let
+                board =
+                    model.board
+
+                mInteractor =
+                    List.find (elementIsAtPosition ( x, y )) board.interactors
+
+                ( updatedMaybeInteractor, projectiles ) =
+                    case mInteractor of
+                        Nothing ->
+                            ( Nothing, [] )
+
+                        Just interactor ->
+                            interact interactor
+
+                updatedInteractors =
+                    case updatedMaybeInteractor of
+                        Nothing ->
+                            List.filter (not << elementIsAtPosition ( x, y )) board.interactors
+
+                        Just interactor ->
+                            List.updateIf (elementIsAtPosition ( x, y )) (always interactor) board.interactors
+
+                updatedProjectiles =
+                    List.append projectiles board.projectiles
+
                 newBoard : Board
                 newBoard =
-                    List.map (updateInRow id (interact interactor)) model.board
+                    { board | interactors = updatedInteractors, projectiles = updatedProjectiles }
             in
             ( { model | board = newBoard }, Cmd.none )
 
         Tick ->
-            let
-                newBoard =
-                    generateNewBoard model.board
-            in
-            ( { model | board = newBoard }, Cmd.none )
+            ( { model | board = updateBoard model }, Cmd.none )
 
 
-interact : Interactor -> Interactor
-interact ({ id, kind } as interactor) =
+interact : Positioned Interactor -> ( Maybe (Positioned Interactor), List (Positioned Projectile) )
+interact (Positioned x y { id, kind }) =
+    let
+        inPlace =
+            Positioned x y
+    in
     case kind of
         One ->
-            Interactor id Two
+            ( Just (inPlace (Interactor id Two)), [] )
 
         Two ->
-            Interactor id Three
+            ( Just (inPlace (Interactor id Three)), [] )
 
         Three ->
-            Interactor id Four
+            ( Just (inPlace (Interactor id Four)), [] )
 
-        _ ->
-            interactor
+        Four ->
+            ( Nothing, [ inPlace <| Projectile Up, inPlace <| Projectile Down, inPlace <| Projectile Left, inPlace <| Projectile Right ] )
 
 
-generateNewBoard : Board -> Board
-generateNewBoard board =
+updateBoard : Model -> Board
+updateBoard { dimension, board } =
     let
-        indexedRows =
-            List.indexedMap Tuple.pair board
-
-        indexedCells =
-            List.concatMap (\( i, row ) -> List.indexedMap (fn i) row) indexedRows
-
-        indexedProjectiles =
-            List.filter (\( _, _, ps ) -> not <| List.isEmpty ps) indexedCells
-
-        flattenedIndexedProjectiles =
-            List.concatMap (\( x, y, ps ) -> List.map (\p -> ( x, y, p )) ps) indexedProjectiles
-
+        updatedProjectiles : List (Positioned Projectile)
         updatedProjectiles =
-            List.filterMap identity (List.map updateProjectile flattenedIndexedProjectiles)
+            List.filterMap updateProjectile board.projectiles
 
-        cleanBoard =
-            boardWithoutProjectiles board
+        range : List Int
+        range =
+            List.range 0 <| dimension - 1
 
-        updatedBoard =
-            List.foldl buildNewBoard cleanBoard updatedProjectiles
+        grid : List Position
+        grid =
+            List.andThen (\x -> List.map (Tuple.pair x) range) range
+
+        updatedCells : List ( Maybe (Positioned Interactor), List (Positioned Projectile) )
+        updatedCells =
+            List.map (updateCell { board | projectiles = updatedProjectiles }) grid
+
+        updatedInteractors : List (Positioned Interactor)
+        updatedInteractors =
+            List.filterMap Tuple.first updatedCells
+
+        positionedProjectiles : List (Positioned Projectile)
+        positionedProjectiles =
+            List.concatMap Tuple.second updatedCells
     in
-    updatedBoard
+    { board | projectiles = positionedProjectiles, interactors = updatedInteractors }
 
 
-type alias PositionedProjectile =
-    ( Int, Int, Projectile )
+updateCell : Board -> Position -> ( Maybe (Positioned Interactor), List (Positioned Projectile) )
+updateCell board ( x, y ) =
+    let
+        mInteractor =
+            List.find (elementIsAtPosition ( x, y )) board.interactors
+
+        projectiles =
+            List.filter (elementIsAtPosition ( x, y )) board.projectiles
+    in
+    List.foldl collide ( mInteractor, [] ) projectiles
 
 
-buildNewBoard : PositionedProjectile -> Board -> Board
-buildNewBoard ( x, y, projectile ) board =
-    List.updateAt y (List.updateAt x (\cell -> updateCell cell projectile)) board
-
-
-updateCell : Cell -> Projectile -> Cell
-updateCell ( mInteractor, projectiles ) projectile =
+collide : Positioned Projectile -> ( Maybe (Positioned Interactor), List (Positioned Projectile) ) -> ( Maybe (Positioned Interactor), List (Positioned Projectile) )
+collide projectile ( mInteractor, projectiles ) =
     case mInteractor of
         Nothing ->
-            ( mInteractor, projectile :: projectiles )
+            ( Nothing, projectile :: projectiles )
 
         Just interactor ->
-            ( Just (interact interactor), [] )
+            let
+                ( newMInteractor, newProjectiles ) =
+                    interact interactor
+            in
+            ( newMInteractor, List.append newProjectiles projectiles )
 
 
-boardWithoutProjectiles : Board -> Board
-boardWithoutProjectiles board =
+updateProjectile : Positioned Projectile -> Maybe (Positioned Projectile)
+updateProjectile (Positioned x y projectile) =
     let
-        cleanRow =
-            List.map cleanCell
-
-        cleanCell ( mi, _ ) =
-            ( mi, [] )
-    in
-    List.map cleanRow board
-
-
-updateProjectile : PositionedProjectile -> Maybe PositionedProjectile
-updateProjectile ( x, y, projectile ) =
-    let
-        newProjectile =
+        ( newX, newY ) =
             case projectile of
                 Projectile Up ->
-                    ( x, y - 1, projectile )
+                    ( x - 1, y )
 
                 Projectile Left ->
-                    ( x - 1, y, projectile )
+                    ( x, y - 1 )
 
                 Projectile Down ->
-                    ( x, y + 1, projectile )
+                    ( x + 1, y )
 
                 Projectile Right ->
-                    ( x + 1, y, projectile )
+                    ( x, y + 1 )
     in
-    if isOffTheScreen newProjectile then
+    if isOffTheScreen newX newY then
         Nothing
 
     else
-        Just newProjectile
+        Just (Positioned newX newY projectile)
 
 
-isOffTheScreen : PositionedProjectile -> Bool
-isOffTheScreen ( x, y, _ ) =
+isOffTheScreen : Int -> Int -> Bool
+isOffTheScreen x y =
     x < 0 || x > 7 || y < 0 || y > 7
-
-
-fn : Int -> Int -> Cell -> ( Int, Int, List Projectile )
-fn y x ( _, projectiles ) =
-    ( x, y, projectiles )
-
-
-updateInRow : Int -> Interactor -> List Cell -> List Cell
-updateInRow id newInteractor row =
-    List.updateIf (interactorMatches id) (\( _, projectiles ) -> ( Just newInteractor, projectiles )) row
-
-
-interactorMatches : Int -> Cell -> Bool
-interactorMatches id ( mInteractor, _ ) =
-    case mInteractor of
-        Nothing ->
-            False
-
-        Just interactor ->
-            id == interactor.id
 
 
 main : Program Flags Model Msg
