@@ -191,13 +191,37 @@ generateNewBoard board =
         updatedProjectiles =
             List.filterMap identity (List.map updateProjectile flattenedIndexedProjectiles)
 
-        _ =
-            Debug.log "roosdlkfj" updatedProjectiles
+        cleanBoard =
+            boardWithoutProjectiles board
+
+        updatedBoard =
+            List.foldl buildNewBoard cleanBoard updatedProjectiles
     in
-    board
+    updatedBoard
 
 
-updateProjectile : ( Int, Int, Projectile ) -> Maybe ( Int, Int, Projectile )
+type alias PositionedProjectile =
+    ( Int, Int, Projectile )
+
+
+buildNewBoard : PositionedProjectile -> Board -> Board
+buildNewBoard ( x, y, projectile ) board =
+    List.updateAt y (List.updateAt x (\( mi, ps ) -> ( mi, projectile :: ps ))) board
+
+
+boardWithoutProjectiles : Board -> Board
+boardWithoutProjectiles board =
+    let
+        cleanRow =
+            List.map cleanCell
+
+        cleanCell ( mi, _ ) =
+            ( mi, [] )
+    in
+    List.map cleanRow board
+
+
+updateProjectile : PositionedProjectile -> Maybe PositionedProjectile
 updateProjectile ( x, y, projectile ) =
     let
         newProjectile =
@@ -221,13 +245,13 @@ updateProjectile ( x, y, projectile ) =
         Just newProjectile
 
 
-isOffTheScreen : ( Int, Int, Projectile ) -> Bool
+isOffTheScreen : PositionedProjectile -> Bool
 isOffTheScreen ( x, y, _ ) =
     x < 0 || x > 7 || y < 0 || y > 7
 
 
 fn : Int -> Int -> Cell -> ( Int, Int, List Projectile )
-fn x y ( _, projectiles ) =
+fn y x ( _, projectiles ) =
     ( x, y, projectiles )
 
 
