@@ -142,26 +142,11 @@ init _ =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Click { id, kind } ->
+        Click ({ id } as interactor) ->
             let
-                newInteractor : Interactor
-                newInteractor =
-                    case kind of
-                        One ->
-                            Interactor id Two
-
-                        Two ->
-                            Interactor id Three
-
-                        Three ->
-                            Interactor id Four
-
-                        _ ->
-                            Interactor id Boom
-
                 newBoard : Board
                 newBoard =
-                    List.map (updateInRow id newInteractor) model.board
+                    List.map (updateInRow id (interact interactor)) model.board
             in
             ( { model | board = newBoard }, Cmd.none )
 
@@ -171,6 +156,22 @@ update msg model =
                     generateNewBoard model.board
             in
             ( { model | board = newBoard }, Cmd.none )
+
+
+interact : Interactor -> Interactor
+interact ({ id, kind } as interactor) =
+    case kind of
+        One ->
+            Interactor id Two
+
+        Two ->
+            Interactor id Three
+
+        Three ->
+            Interactor id Four
+
+        _ ->
+            interactor
 
 
 generateNewBoard : Board -> Board
@@ -206,7 +207,17 @@ type alias PositionedProjectile =
 
 buildNewBoard : PositionedProjectile -> Board -> Board
 buildNewBoard ( x, y, projectile ) board =
-    List.updateAt y (List.updateAt x (\( mi, ps ) -> ( mi, projectile :: ps ))) board
+    List.updateAt y (List.updateAt x (\cell -> updateCell cell projectile)) board
+
+
+updateCell : Cell -> Projectile -> Cell
+updateCell ( mInteractor, projectiles ) projectile =
+    case mInteractor of
+        Nothing ->
+            ( mInteractor, projectile :: projectiles )
+
+        Just interactor ->
+            ( Just (interact interactor), [] )
 
 
 boardWithoutProjectiles : Board -> Board
