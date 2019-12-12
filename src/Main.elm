@@ -1,7 +1,7 @@
 module Main exposing (main)
 
 import Browser
-import Html exposing (Html, div, img, span, text)
+import Html exposing (Html, button, div, img, span, text)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import List.Extra as List
@@ -9,6 +9,7 @@ import List.Extra as List
 
 type Msg
     = Click Interactor
+    | Tick
 
 
 type alias Flags =
@@ -57,7 +58,10 @@ type alias Model =
 
 view : Model -> Html Msg
 view { board } =
-    div [ class "board" ] <| List.concatMap viewRow board
+    div []
+        [ div [ class "board" ] <| List.concatMap viewRow board
+        , button [ onClick Tick ] [ text "Tick" ]
+        ]
 
 
 viewRow : List Cell -> List (Html Msg)
@@ -117,7 +121,7 @@ interactorClass kind =
 
 initialBoard : Board
 initialBoard =
-    [ [ ( Nothing, [ Projectile Down ] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Just { id = 1, kind = One }, [] ), ( Nothing, [] ) ]
+    [ [ ( Nothing, [ Projectile Down, Projectile Right ] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Just { id = 1, kind = One }, [] ), ( Nothing, [] ) ]
     , [ ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Just { id = 2, kind = Three }, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ) ]
     , [ ( Nothing, [ Projectile Up ] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Just { id = 3, kind = Two }, [] ), ( Nothing, [] ) ]
     , [ ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Just { id = 4, kind = Four }, [] ), ( Nothing, [] ), ( Nothing, [] ) ]
@@ -160,6 +164,71 @@ update msg model =
                     List.map (updateInRow id newInteractor) model.board
             in
             ( { model | board = newBoard }, Cmd.none )
+
+        Tick ->
+            let
+                newBoard =
+                    generateNewBoard model.board
+            in
+            ( { model | board = newBoard }, Cmd.none )
+
+
+generateNewBoard : Board -> Board
+generateNewBoard board =
+    let
+        indexedRows =
+            List.indexedMap Tuple.pair board
+
+        indexedCells =
+            List.concatMap (\( i, row ) -> List.indexedMap (fn i) row) indexedRows
+
+        indexedProjectiles =
+            List.filter (\( _, _, ps ) -> not <| List.isEmpty ps) indexedCells
+
+        flattenedIndexedProjectiles =
+            List.concatMap (\( x, y, ps ) -> List.map (\p -> ( x, y, p )) ps) indexedProjectiles
+
+        updatedProjectiles =
+            List.filterMap identity (List.map updateProjectile flattenedIndexedProjectiles)
+
+        _ =
+            Debug.log "roosdlkfj" updatedProjectiles
+    in
+    board
+
+
+updateProjectile : ( Int, Int, Projectile ) -> Maybe ( Int, Int, Projectile )
+updateProjectile ( x, y, projectile ) =
+    let
+        newProjectile =
+            case projectile of
+                Projectile Up ->
+                    ( x, y - 1, projectile )
+
+                Projectile Left ->
+                    ( x - 1, y, projectile )
+
+                Projectile Down ->
+                    ( x, y + 1, projectile )
+
+                Projectile Right ->
+                    ( x + 1, y, projectile )
+    in
+    if isOffTheScreen newProjectile then
+        Nothing
+
+    else
+        Just newProjectile
+
+
+isOffTheScreen : ( Int, Int, Projectile ) -> Bool
+isOffTheScreen ( x, y, _ ) =
+    x < 0 || x > 7 || y < 0 || y > 7
+
+
+fn : Int -> Int -> Cell -> ( Int, Int, List Projectile )
+fn x y ( _, projectiles ) =
+    ( x, y, projectiles )
 
 
 updateInRow : Int -> Interactor -> List Cell -> List Cell
