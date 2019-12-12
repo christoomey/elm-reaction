@@ -1,0 +1,35 @@
+$cell-size: 300px;
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(4, $cell-size);
+  grid-template-rows: repeat(4, $cell-size);
+}
+
+.cell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid #bbb;
+
+
+  &.interactor-one {
+    background: url(./assets/images/oneCore.gif) no-repeat center center;
+    background-size: cover;
+  }
+
+  &.interactor-two {
+    background: url(./assets/images/twoCore.gif) no-repeat center center;
+    background-size: cover;
+  }
+
+  &.interactor-three {
+    background: url(./assets/images/threeCore.gif) no-repeat center center;
+    background-size: cover;
+  }
+
+  &.interactor-four {
+    background: url(./assets/images/fourCore.gif) no-repeat center center;
+    background-size: cover;
+  }
+}

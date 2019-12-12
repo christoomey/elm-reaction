@@ -1,7 +1,7 @@
 module Main exposing (main)
 
 import Browser
-import Html exposing (Html, div, text)
+import Html exposing (Html, div, img, text)
 import Html.Attributes exposing (class)
 
 
@@ -56,18 +56,32 @@ viewCell : Maybe Interactor -> Html Msg
 viewCell mInteractor =
     case mInteractor of
         Nothing ->
-            div [ class "cell" ] [ text "empty" ]
+            div [ class "cell" ] []
 
-        Just _ ->
-            div [ class "cell" ] [ text "interactor" ]
+        Just interactor ->
+            case interactor of
+                One ->
+                    div [ class "cell interactor-one" ] []
+
+                Two ->
+                    div [ class "cell interactor-two" ] []
+
+                Three ->
+                    div [ class "cell interactor-three" ] []
+
+                Four ->
+                    div [ class "cell interactor-four" ] []
+
+                _ ->
+                    div [ class "cell" ] [ text "INTERACTOR" ]
 
 
 initialBoard : Board
 initialBoard =
     [ [ Nothing, Nothing, Just One, Nothing ]
-    , [ Nothing, Nothing, Nothing, Nothing ]
-    , [ Nothing, Nothing, Just One, Nothing ]
-    , [ Nothing, Nothing, Nothing, Nothing ]
+    , [ Just Three, Nothing, Nothing, Nothing ]
+    , [ Nothing, Nothing, Just Two, Nothing ]
+    , [ Nothing, Just Four, Nothing, Nothing ]
     ]
 
 
