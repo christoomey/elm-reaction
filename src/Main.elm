@@ -24,6 +24,10 @@ type InteractorKind
     | Arrow Direction
 
 
+type alias Cell =
+    ( Maybe Interactor, List Projectile )
+
+
 type alias Interactor =
     { id : Int
     , kind : InteractorKind
@@ -42,7 +46,7 @@ type Projectile
 
 
 type alias Board =
-    List (List (Maybe Interactor))
+    List (List Cell)
 
 
 type alias Model =
@@ -56,13 +60,13 @@ view { board } =
     div [ class "board" ] <| List.concatMap viewRow board
 
 
-viewRow : List (Maybe Interactor) -> List (Html Msg)
+viewRow : List Cell -> List (Html Msg)
 viewRow row =
     List.map viewCell row
 
 
-viewCell : Maybe Interactor -> Html Msg
-viewCell mInteractor =
+viewCell : Cell -> Html Msg
+viewCell ( mInteractor, _ ) =
     case mInteractor of
         Nothing ->
             div [ class "cell" ] []
@@ -92,14 +96,14 @@ interactorClass kind =
 
 initialBoard : Board
 initialBoard =
-    [ [ Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Just { id = 1, kind = One }, Nothing ]
-    , [ Nothing, Nothing, Nothing, Nothing, Just { id = 2, kind = Three }, Nothing, Nothing, Nothing ]
-    , [ Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Just { id = 3, kind = Two }, Nothing ]
-    , [ Nothing, Nothing, Nothing, Nothing, Nothing, Just { id = 4, kind = Four }, Nothing, Nothing ]
-    , [ Nothing, Nothing, Nothing, Nothing, Just { id = 5, kind = Three }, Nothing, Nothing, Nothing ]
-    , [ Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Just { id = 6, kind = Two }, Nothing ]
-    , [ Nothing, Just { id = 7, kind = Three }, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing ]
-    , [ Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Just { id = 8, kind = Two }, Nothing ]
+    [ [ ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Just { id = 1, kind = One }, [] ), ( Nothing, [] ) ]
+    , [ ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Just { id = 2, kind = Three }, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ) ]
+    , [ ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Just { id = 3, kind = Two }, [] ), ( Nothing, [] ) ]
+    , [ ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Just { id = 4, kind = Four }, [] ), ( Nothing, [] ), ( Nothing, [] ) ]
+    , [ ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Just { id = 5, kind = Three }, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ) ]
+    , [ ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Just { id = 6, kind = Two }, [] ), ( Nothing, [] ) ]
+    , [ ( Nothing, [] ), ( Just { id = 7, kind = Three }, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ) ]
+    , [ ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Nothing, [] ), ( Just { id = 8, kind = Two }, [] ), ( Nothing, [] ) ]
     ]
 
 
@@ -137,13 +141,13 @@ update msg model =
             ( { model | board = newBoard }, Cmd.none )
 
 
-updateInRow : Int -> Interactor -> List (Maybe Interactor) -> List (Maybe Interactor)
+updateInRow : Int -> Interactor -> List Cell -> List Cell
 updateInRow id newInteractor row =
-    List.updateIf (interactorMatches id) (\_ -> Just newInteractor) row
+    List.updateIf (interactorMatches id) (\( _, projectiles ) -> ( Just newInteractor, projectiles )) row
 
 
-interactorMatches : Int -> Maybe Interactor -> Bool
-interactorMatches id mInteractor =
+interactorMatches : Int -> Cell -> Bool
+interactorMatches id ( mInteractor, _ ) =
     case mInteractor of
         Nothing ->
             False
