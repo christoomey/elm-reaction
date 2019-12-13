@@ -23,11 +23,8 @@ $cell-size: 150px;
 }
 
 .cell {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  position: relative;
   border: 1px solid #bbb;
-
 
   &.interactor-one {
     background: url(./assets/images/oneCore.gif) no-repeat center center;
@@ -74,6 +71,7 @@ $cell-size: 150px;
 
 .projectile-up, .projectile-down, .projectile-left, .projectile-right {
   background: url(./assets/images/projectile.gif) no-repeat center center;
+  position: absolute;
   width: 100%;
   height: 100%;
 }
