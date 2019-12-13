@@ -8,6 +8,11 @@ import Html.Events exposing (onClick)
 import List.Extra as List
 
 
+percentagePerTick : Float
+percentagePerTick =
+    0.05
+
+
 type Msg
     = Click Position
     | Frame Float
@@ -62,7 +67,6 @@ type alias Board =
 type alias Model =
     { board : Board
     , dimension : Int
-    , accumulatedTime : Float
     , isPaused : Bool
     }
 
@@ -179,7 +183,7 @@ initialBoard =
 
 initialModel : Model
 initialModel =
-    { board = initialBoard, dimension = 8, accumulatedTime = 0, isPaused = True }
+    { board = initialBoard, dimension = 8, isPaused = True }
 
 
 init : Flags -> ( Model, Cmd Msg )
@@ -237,20 +241,12 @@ update msg model =
             else
                 handleClick pos model
 
-        Frame delta ->
-            let
-                accumulatedTime =
-                    if model.isPaused then
-                        model.accumulatedTime
-
-                    else
-                        model.accumulatedTime + delta
-            in
-            if accumulatedTime > 200 then
-                ( { model | board = updateBoard model, accumulatedTime = 0 }, Cmd.none )
+        Frame _ ->
+            if model.isPaused then
+                ( model, Cmd.none )
 
             else
-                ( { model | accumulatedTime = accumulatedTime }, Cmd.none )
+                ( { model | board = updateBoard model }, Cmd.none )
 
         Reset ->
             ( { initialModel | isPaused = model.isPaused }, Cmd.none )
@@ -367,27 +363,35 @@ collide projectile ( mInteractor, projectiles ) =
 
 
 updateProjectile : Positioned Projectile -> Maybe (Positioned Projectile)
-updateProjectile (Positioned x y _ projectile) =
+updateProjectile (Positioned x y percentage projectile) =
     let
-        ( newX, newY ) =
+        ( newX, newY, newPercentage ) =
             case projectile of
                 Projectile Up ->
-                    ( x - 1, y )
+                    ( x - 1, y, percentage )
 
                 Projectile Left ->
-                    ( x, y - 1 )
+                    ( x, y - 1, percentage )
 
                 Projectile Down ->
-                    ( x + 1, y )
+                    ( x + 1, y, percentage )
 
                 Projectile Right ->
-                    ( x, y + 1 )
+                    let
+                        tempNewPercentage =
+                            percentage + percentagePerTick
+                    in
+                    if tempNewPercentage > 0.5 then
+                        ( x, y + 1, -0.5 )
+
+                    else
+                        ( x, y, tempNewPercentage )
     in
     if isOffTheScreen newX newY then
         Nothing
 
     else
-        Just (Positioned newX newY 0 projectile)
+        Just (Positioned newX newY newPercentage projectile)
 
 
 isOffTheScreen : Int -> Int -> Bool
