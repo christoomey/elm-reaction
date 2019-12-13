@@ -16,6 +16,7 @@ percentagePerTick =
 type Msg
     = Click Position
     | Frame Float
+    | Tick
     | Reset
     | TogglePause
 
@@ -77,15 +78,26 @@ view model =
         [ div [ class "board" ] <| renderableBoard model
         , div [] [ button [ onClick Reset ] [ text "Reset" ] ]
         , div []
-            [ button [ onClick TogglePause ]
-                [ text <|
-                    if model.isPaused then
-                        "Start"
-
-                    else
-                        "Pause"
-                ]
+            [ pauseButton model.isPaused
+            , tickButton
             ]
+        ]
+
+
+tickButton : Html Msg
+tickButton =
+    button [ onClick Tick ] [ text "Tick" ]
+
+
+pauseButton : Bool -> Html Msg
+pauseButton isPaused =
+    button [ onClick TogglePause ]
+        [ text <|
+            if isPaused then
+                "Start"
+
+            else
+                "Pause"
         ]
 
 
@@ -263,6 +275,9 @@ update msg model =
 
             else
                 ( { model | board = updateBoard model }, Cmd.none )
+
+        Tick ->
+            ( { model | board = updateBoard model }, Cmd.none )
 
         Reset ->
             ( { initialModel | isPaused = model.isPaused }, Cmd.none )
