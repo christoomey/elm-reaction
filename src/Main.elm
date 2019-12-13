@@ -191,41 +191,50 @@ getPositionedElement (Positioned _ _ a) =
     a
 
 
+handleClick : Position -> Model -> ( Model, Cmd Msg )
+handleClick ( x, y ) model =
+    let
+        board =
+            model.board
+
+        mInteractor =
+            List.find (elementIsAtPosition ( x, y )) board.interactors
+
+        ( updatedMaybeInteractor, projectiles ) =
+            case mInteractor of
+                Nothing ->
+                    ( Nothing, [] )
+
+                Just interactor ->
+                    interact interactor Nothing
+
+        updatedInteractors =
+            case updatedMaybeInteractor of
+                Nothing ->
+                    List.filter (not << elementIsAtPosition ( x, y )) board.interactors
+
+                Just interactor ->
+                    List.updateIf (elementIsAtPosition ( x, y )) (always interactor) board.interactors
+
+        updatedProjectiles =
+            List.append projectiles board.projectiles
+
+        newBoard : Board
+        newBoard =
+            { board | interactors = updatedInteractors, projectiles = updatedProjectiles }
+    in
+    ( { model | board = newBoard }, Cmd.none )
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Click ( x, y ) ->
-            let
-                board =
-                    model.board
+        Click pos ->
+            if model.isPaused then
+                ( model, Cmd.none )
 
-                mInteractor =
-                    List.find (elementIsAtPosition ( x, y )) board.interactors
-
-                ( updatedMaybeInteractor, projectiles ) =
-                    case mInteractor of
-                        Nothing ->
-                            ( Nothing, [] )
-
-                        Just interactor ->
-                            interact interactor Nothing
-
-                updatedInteractors =
-                    case updatedMaybeInteractor of
-                        Nothing ->
-                            List.filter (not << elementIsAtPosition ( x, y )) board.interactors
-
-                        Just interactor ->
-                            List.updateIf (elementIsAtPosition ( x, y )) (always interactor) board.interactors
-
-                updatedProjectiles =
-                    List.append projectiles board.projectiles
-
-                newBoard : Board
-                newBoard =
-                    { board | interactors = updatedInteractors, projectiles = updatedProjectiles }
-            in
-            ( { model | board = newBoard }, Cmd.none )
+            else
+                handleClick pos model
 
         Frame delta ->
             let
@@ -243,7 +252,7 @@ update msg model =
                 ( { model | accumulatedTime = accumulatedTime }, Cmd.none )
 
         Reset ->
-            ( initialModel, Cmd.none )
+            ( { initialModel | isPaused = model.isPaused }, Cmd.none )
 
         TogglePause ->
             ( { model | isPaused = not model.isPaused }, Cmd.none )
