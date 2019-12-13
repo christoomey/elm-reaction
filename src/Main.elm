@@ -201,6 +201,7 @@ initialBoard =
         [ Positioned 2 2 -0.4 (Projectile Right)
         , Positioned 1 7 0 (Projectile Left)
         , Positioned 6 4 0 (Projectile Up)
+        , Positioned 6 6 0 (Projectile Down)
 
         -- , Positioned 4 2 0 (Projectile Down)
         -- , Positioned 2 1 0 (Projectile Down)
@@ -291,50 +292,67 @@ interact ((Positioned x y _ { id, kind }) as positionedInteractor) maybeProjecti
     let
         inPlace =
             Positioned x y 0
+
+        shouldInteract =
+            case maybeProjectile of
+                Nothing ->
+                    True
+
+                Just (Positioned _ _ percentage _) ->
+                    percentage < 0.01 && percentage > -0.01
     in
-    case kind of
-        One ->
-            ( Just (inPlace (Interactor id Two)), [] )
+    if shouldInteract then
+        case kind of
+            One ->
+                ( Just (inPlace (Interactor id Two)), [] )
 
-        Two ->
-            ( Just (inPlace (Interactor id Three)), [] )
+            Two ->
+                ( Just (inPlace (Interactor id Three)), [] )
 
-        Three ->
-            ( Just (inPlace (Interactor id Four)), [] )
+            Three ->
+                ( Just (inPlace (Interactor id Four)), [] )
 
-        Four ->
-            ( Nothing, [ inPlace <| Projectile Up, inPlace <| Projectile Down, inPlace <| Projectile Left, inPlace <| Projectile Right ] )
+            Four ->
+                ( Nothing, [ inPlace <| Projectile Up, inPlace <| Projectile Down, inPlace <| Projectile Left, inPlace <| Projectile Right ] )
 
-        Reverse ->
-            case maybeProjectile of
-                Nothing ->
-                    ( Just positionedInteractor, [] )
+            Reverse ->
+                case maybeProjectile of
+                    Nothing ->
+                        ( Just positionedInteractor, [] )
 
-                Just (Positioned _ _ _ (Projectile dir)) ->
-                    let
-                        reversedDirection =
-                            case dir of
-                                Up ->
-                                    Down
+                    Just (Positioned _ _ _ (Projectile dir)) ->
+                        let
+                            reversedDirection =
+                                case dir of
+                                    Up ->
+                                        Down
 
-                                Down ->
-                                    Up
+                                    Down ->
+                                        Up
 
-                                Left ->
-                                    Right
+                                    Left ->
+                                        Right
 
-                                Right ->
-                                    Left
-                    in
-                    ( Just positionedInteractor, [ Positioned x y 0 (Projectile reversedDirection) ] )
+                                    Right ->
+                                        Left
+                        in
+                        ( Just positionedInteractor, [ Positioned x y 0 (Projectile reversedDirection) ] )
 
-        Arrow dir ->
-            case maybeProjectile of
-                Nothing ->
-                    ( Just positionedInteractor, [] )
+            Arrow dir ->
+                case maybeProjectile of
+                    Nothing ->
+                        ( Just positionedInteractor, [] )
 
-                Just _ ->
-                    ( Just positionedInteractor, [ Positioned x y 0 (Projectile dir) ] )
+                    Just _ ->
+                        ( Just positionedInteractor, [ Positioned x y 0 (Projectile dir) ] )
+
+    else
+        case maybeProjectile of
+            Nothing ->
+                ( Just positionedInteractor, [] )
+
+            Just positionedProjectile ->
+                ( Just positionedInteractor, [ positionedProjectile ] )
 
 
 updateBoard : Model -> Board
