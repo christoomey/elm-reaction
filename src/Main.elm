@@ -69,6 +69,7 @@ type alias Model =
     { board : Board
     , dimension : Int
     , isPaused : Bool
+    , clickCount : Int
     }
 
 
@@ -91,6 +92,7 @@ controls model =
                 else
                     "Playing"
             ]
+        , text <| "Click count: " ++ String.fromInt model.clickCount
         , div [ class "button-group" ]
             [ pauseButton model.isPaused
             , button [ onClick Reset ] [ text "Reset" ]
@@ -246,7 +248,7 @@ initialBoard =
 
 initialModel : Model
 initialModel =
-    { board = initialBoard, dimension = 8, isPaused = False }
+    { board = initialBoard, dimension = 8, isPaused = False, clickCount = 0 }
 
 
 init : Flags -> ( Model, Cmd Msg )
@@ -276,6 +278,14 @@ handleClick ( x, y ) model =
                 Just interactor ->
                     interact interactor Nothing
 
+        newCount =
+            case mInteractor of
+                Nothing ->
+                    model.clickCount
+
+                Just _ ->
+                    model.clickCount + 1
+
         updatedInteractors =
             case updatedMaybeInteractor of
                 Nothing ->
@@ -291,7 +301,7 @@ handleClick ( x, y ) model =
         newBoard =
             { board | interactors = updatedInteractors, projectiles = updatedProjectiles }
     in
-    ( { model | board = newBoard }, Cmd.none )
+    ( { model | board = newBoard, clickCount = newCount }, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
