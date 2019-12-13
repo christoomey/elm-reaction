@@ -1,4 +1,17 @@
 $cell-size: 150px;
+$max-width: 60rem;
+
+.controls  {
+  max-width: $max-width;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  padding: 2rem 0;
+
+  h3 {
+    margin: 0;
+  }
+}
 
 .board {
   display: grid;
@@ -6,7 +19,7 @@ $cell-size: 150px;
   grid-gap: 2px;
   grid-auto-rows: 1fr;
   margin: 0 auto;
-  max-width: 60rem;
+  max-width: $max-width;
 
   &::before {
     content: '';

@@ -2,7 +2,7 @@ module Main exposing (main)
 
 import Browser
 import Browser.Events exposing (onAnimationFrameDelta)
-import Html exposing (Html, button, div, span, text)
+import Html exposing (Html, button, div, h3, span, text)
 import Html.Attributes exposing (class, style)
 import Html.Events exposing (onClick)
 import List.Extra as List
@@ -75,13 +75,52 @@ type alias Model =
 view : Model -> Html Msg
 view model =
     div []
-        [ div [ class "board" ] <| renderableBoard model
-        , div [] [ button [ onClick Reset ] [ text "Reset" ] ]
-        , div []
+        [ controls model
+        , div [ class "board" ] <| renderableBoard model
+        ]
+
+
+controls : Model -> Html Msg
+controls model =
+    div [ class "controls" ]
+        [ h3 []
+            [ text <|
+                if isComplete model.board then
+                    "COMPLETE"
+
+                else
+                    "Playing"
+            ]
+        , div [ class "button-group" ]
             [ pauseButton model.isPaused
+            , button [ onClick Reset ] [ text "Reset" ]
             , tickButton
             ]
         ]
+
+
+isComplete : Board -> Bool
+isComplete board =
+    not <| List.any (\(Positioned _ _ _ { kind }) -> isClickable kind) board.interactors
+
+
+isClickable : InteractorKind -> Bool
+isClickable kind =
+    case kind of
+        One ->
+            True
+
+        Two ->
+            True
+
+        Three ->
+            True
+
+        Four ->
+            True
+
+        _ ->
+            False
 
 
 tickButton : Html Msg
@@ -124,7 +163,7 @@ viewCell board ( x, y ) =
     in
     case mInteractor of
         Nothing ->
-            div [ class "cell" ] renderedProjectiles
+            div [ class "cell cell-empty" ] renderedProjectiles
 
         Just (Positioned _ _ _ interactor) ->
             div [ onClick (Click ( x, y )), class <| "cell " ++ interactorClass interactor.kind ] <| renderedProjectiles
