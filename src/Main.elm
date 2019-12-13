@@ -2,7 +2,7 @@ module Main exposing (main)
 
 import Browser
 import Browser.Events exposing (onAnimationFrameDelta)
-import Html exposing (Html, div, span)
+import Html exposing (Html, button, div, span, text)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import List.Extra as List
@@ -11,6 +11,7 @@ import List.Extra as List
 type Msg
     = Click Position
     | Frame Float
+    | Reset
 
 
 type alias Position =
@@ -66,6 +67,7 @@ view : Model -> Html Msg
 view model =
     div []
         [ div [ class "board" ] <| renderableBoard model
+        , div [] [ button [ onClick Reset ] [ text "Reset" ] ]
         ]
 
 
@@ -151,11 +153,14 @@ initialBoard =
     }
 
 
+initialModel : Model
+initialModel =
+    { board = initialBoard, dimension = 8, accumulatedTime = 0 }
+
+
 init : Flags -> ( Model, Cmd Msg )
 init _ =
-    ( { board = initialBoard, dimension = 8, accumulatedTime = 0 }
-    , Cmd.none
-    )
+    ( initialModel, Cmd.none )
 
 
 elementIsAtPosition : Position -> Positioned a -> Bool
@@ -214,6 +219,9 @@ update msg model =
 
             else
                 ( { model | accumulatedTime = accumulatedTime }, Cmd.none )
+
+        Reset ->
+            ( initialModel, Cmd.none )
 
 
 interact : Positioned Interactor -> ( Maybe (Positioned Interactor), List (Positioned Projectile) )
