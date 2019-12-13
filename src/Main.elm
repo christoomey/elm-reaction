@@ -12,6 +12,7 @@ type Msg
     = Click Position
     | Frame Float
     | Reset
+    | TogglePause
 
 
 type alias Position =
@@ -60,6 +61,7 @@ type alias Model =
     { board : Board
     , dimension : Int
     , accumulatedTime : Float
+    , isPaused : Bool
     }
 
 
@@ -68,6 +70,16 @@ view model =
     div []
         [ div [ class "board" ] <| renderableBoard model
         , div [] [ button [ onClick Reset ] [ text "Reset" ] ]
+        , div []
+            [ button [ onClick TogglePause ]
+                [ text <|
+                    if model.isPaused then
+                        "Start"
+
+                    else
+                        "Pause"
+                ]
+            ]
         ]
 
 
@@ -155,7 +167,7 @@ initialBoard =
 
 initialModel : Model
 initialModel =
-    { board = initialBoard, dimension = 8, accumulatedTime = 0 }
+    { board = initialBoard, dimension = 8, accumulatedTime = 0, isPaused = True }
 
 
 init : Flags -> ( Model, Cmd Msg )
@@ -212,7 +224,11 @@ update msg model =
         Frame delta ->
             let
                 accumulatedTime =
-                    model.accumulatedTime + delta
+                    if model.isPaused then
+                        model.accumulatedTime
+
+                    else
+                        model.accumulatedTime + delta
             in
             if accumulatedTime > 200 then
                 ( { model | board = updateBoard model, accumulatedTime = 0 }, Cmd.none )
@@ -222,6 +238,9 @@ update msg model =
 
         Reset ->
             ( initialModel, Cmd.none )
+
+        TogglePause ->
+            ( { model | isPaused = not model.isPaused }, Cmd.none )
 
 
 interact : Positioned Interactor -> ( Maybe (Positioned Interactor), List (Positioned Projectile) )
