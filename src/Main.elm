@@ -10,7 +10,7 @@ import List.Extra as List
 
 percentagePerTick : Float
 percentagePerTick =
-    0.05
+    0.1
 
 
 type Msg
@@ -142,7 +142,22 @@ interactorClass kind =
 
 viewProjectile : Positioned Projectile -> Html Msg
 viewProjectile (Positioned _ _ percentage (Projectile dir)) =
-    span [ class <| "projectile-" ++ directionToString dir, style "left" <| String.fromFloat (percentage * 100) ++ "%" ] []
+    let
+        positioning =
+            case dir of
+                Right ->
+                    style "left" <| String.fromFloat (percentage * 100) ++ "%"
+
+                Down ->
+                    style "top" <| String.fromFloat (percentage * 100) ++ "%"
+
+                Left ->
+                    style "left" <| String.fromFloat (percentage * 100) ++ "%"
+
+                Up ->
+                    style "top" <| String.fromFloat (percentage * 100) ++ "%"
+    in
+    span [ class <| "projectile-" ++ directionToString dir, positioning ] []
 
 
 directionToString : Direction -> String
@@ -172,8 +187,9 @@ initialBoard =
         ]
     , projectiles =
         [ Positioned 2 2 -0.4 (Projectile Right)
+        , Positioned 1 7 0 (Projectile Left)
+        , Positioned 6 4 0 (Projectile Up)
 
-        -- , Positioned 1 4 0 (Projectile Left)
         -- , Positioned 4 2 0 (Projectile Down)
         -- , Positioned 2 1 0 (Projectile Down)
         -- , Positioned 3 3 0 (Projectile Up)
@@ -368,13 +384,37 @@ updateProjectile (Positioned x y percentage projectile) =
         ( newX, newY, newPercentage ) =
             case projectile of
                 Projectile Up ->
-                    ( x - 1, y, percentage )
+                    let
+                        tempNewPercentage =
+                            percentage - percentagePerTick
+                    in
+                    if tempNewPercentage < -0.5 then
+                        ( x - 1, y, 0.5 )
+
+                    else
+                        ( x, y, tempNewPercentage )
 
                 Projectile Left ->
-                    ( x, y - 1, percentage )
+                    let
+                        tempNewPercentage =
+                            percentage - percentagePerTick
+                    in
+                    if tempNewPercentage < -0.5 then
+                        ( x, y - 1, 0.5 )
+
+                    else
+                        ( x, y, tempNewPercentage )
 
                 Projectile Down ->
-                    ( x + 1, y, percentage )
+                    let
+                        tempNewPercentage =
+                            percentage + percentagePerTick
+                    in
+                    if tempNewPercentage > 0.5 then
+                        ( x + 1, y, -0.5 )
+
+                    else
+                        ( x, y, tempNewPercentage )
 
                 Projectile Right ->
                     let
