@@ -28,6 +28,7 @@ type InteractorKind
     | Two
     | Three
     | Four
+    | Reverse
 
 
 type Positioned a
@@ -127,6 +128,9 @@ interactorClass kind =
         Four ->
             "interactor-four"
 
+        Reverse ->
+            "interactor-reverse"
+
 
 viewProjectile : Projectile -> Html Msg
 viewProjectile projectile =
@@ -154,12 +158,14 @@ initialBoard =
     { interactors =
         [ Positioned 0 0 { id = 1, kind = One }
         , Positioned 2 6 { id = 1, kind = Four }
+        , Positioned 4 1 { id = 1, kind = Reverse }
         , Positioned 7 7 { id = 2, kind = Three }
         ]
     , projectiles =
         [ Positioned 2 2 (Projectile Right)
         , Positioned 1 4 (Projectile Left)
         , Positioned 4 2 (Projectile Down)
+        , Positioned 2 1 (Projectile Down)
         , Positioned 3 3 (Projectile Up)
         ]
     }
@@ -202,7 +208,7 @@ update msg model =
                             ( Nothing, [] )
 
                         Just interactor ->
-                            interact interactor
+                            interact interactor Nothing
 
                 updatedInteractors =
                     case updatedMaybeInteractor of
@@ -243,8 +249,8 @@ update msg model =
             ( { model | isPaused = not model.isPaused }, Cmd.none )
 
 
-interact : Positioned Interactor -> ( Maybe (Positioned Interactor), List (Positioned Projectile) )
-interact (Positioned x y { id, kind }) =
+interact : Positioned Interactor -> Maybe (Positioned Projectile) -> ( Maybe (Positioned Interactor), List (Positioned Projectile) )
+interact (Positioned x y { id, kind }) maybeProjectile =
     let
         inPlace =
             Positioned x y
@@ -261,6 +267,29 @@ interact (Positioned x y { id, kind }) =
 
         Four ->
             ( Nothing, [ inPlace <| Projectile Up, inPlace <| Projectile Down, inPlace <| Projectile Left, inPlace <| Projectile Right ] )
+
+        Reverse ->
+            case maybeProjectile of
+                Nothing ->
+                    ( Just (inPlace (Interactor id Reverse)), [] )
+
+                Just (Positioned _ _ (Projectile dir)) ->
+                    let
+                        reversedDirection =
+                            case dir of
+                                Up ->
+                                    Down
+
+                                Down ->
+                                    Up
+
+                                Left ->
+                                    Right
+
+                                Right ->
+                                    Left
+                    in
+                    ( Just (inPlace (Interactor id Reverse)), [ Positioned x y (Projectile reversedDirection) ] )
 
 
 updateBoard : Model -> Board
@@ -314,7 +343,7 @@ collide projectile ( mInteractor, projectiles ) =
         Just interactor ->
             let
                 ( newMInteractor, newProjectiles ) =
-                    interact interactor
+                    interact interactor (Just projectile)
             in
             ( newMInteractor, List.append newProjectiles projectiles )
 

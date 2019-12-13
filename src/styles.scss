@@ -48,6 +48,11 @@ $cell-size: 150px;
     background: url(./assets/images/fourCore.gif) no-repeat center center;
     background-size: cover;
   }
+
+  &.interactor-reverse {
+    background: url(./assets/images/reverse.gif) no-repeat center center;
+    background-size: cover;
+  }
 }
 
 .projectile-up, .projectile-down, .projectile-left, .projectile-right {
