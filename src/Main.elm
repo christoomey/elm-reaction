@@ -241,12 +241,13 @@ initialBoard =
         , Positioned 6 1 0 { id = 2, kind = Two }
         , Positioned 0 7 0 { id = 2, kind = Reverse }
         , Positioned 2 4 0 { id = 1, kind = Four }
+        , Positioned 4 7 0 { id = 1, kind = One }
         , Positioned 0 4 0 { id = 1, kind = Four }
         , Positioned 2 6 0 { id = 1, kind = Four }
         , Positioned 3 2 0 { id = 1, kind = Three }
         , Positioned 5 4 0 { id = 2, kind = Arrow Right }
         , Positioned 5 7 0 { id = 2, kind = Arrow Up }
-        , Positioned 6 3 0 { id = 2, kind = Four }
+        , Positioned 6 3 0 { id = 2, kind = Three }
         , Positioned 1 4 0 { id = 1, kind = Three }
         , Positioned 2 5 0 { id = 1, kind = Three }
         , Positioned 7 4 0 { id = 2, kind = Arrow Right }
