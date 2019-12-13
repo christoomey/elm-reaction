@@ -29,6 +29,7 @@ type InteractorKind
     | Three
     | Four
     | Reverse
+    | Arrow Direction
 
 
 type Positioned a
@@ -131,25 +132,28 @@ interactorClass kind =
         Reverse ->
             "interactor-reverse"
 
+        Arrow dir ->
+            "interactor-arrow-" ++ directionToString dir
+
 
 viewProjectile : Projectile -> Html Msg
-viewProjectile projectile =
-    span [ class <| "projectile-" ++ directionToString projectile ] []
+viewProjectile (Projectile dir) =
+    span [ class <| "projectile-" ++ directionToString dir ] []
 
 
-directionToString : Projectile -> String
-directionToString projectile =
-    case projectile of
-        Projectile Up ->
+directionToString : Direction -> String
+directionToString direction =
+    case direction of
+        Up ->
             "up"
 
-        Projectile Down ->
+        Down ->
             "down"
 
-        Projectile Left ->
+        Left ->
             "left"
 
-        Projectile Right ->
+        Right ->
             "right"
 
 
@@ -157,6 +161,7 @@ initialBoard : Board
 initialBoard =
     { interactors =
         [ Positioned 0 0 { id = 1, kind = One }
+        , Positioned 1 1 { id = 1, kind = Arrow Down }
         , Positioned 2 6 { id = 1, kind = Four }
         , Positioned 4 1 { id = 1, kind = Reverse }
         , Positioned 7 7 { id = 2, kind = Three }
@@ -259,7 +264,7 @@ update msg model =
 
 
 interact : Positioned Interactor -> Maybe (Positioned Projectile) -> ( Maybe (Positioned Interactor), List (Positioned Projectile) )
-interact (Positioned x y { id, kind }) maybeProjectile =
+interact ((Positioned x y { id, kind }) as positionedInteractor) maybeProjectile =
     let
         inPlace =
             Positioned x y
@@ -280,7 +285,7 @@ interact (Positioned x y { id, kind }) maybeProjectile =
         Reverse ->
             case maybeProjectile of
                 Nothing ->
-                    ( Just (inPlace (Interactor id Reverse)), [] )
+                    ( Just positionedInteractor, [] )
 
                 Just (Positioned _ _ (Projectile dir)) ->
                     let
@@ -298,7 +303,15 @@ interact (Positioned x y { id, kind }) maybeProjectile =
                                 Right ->
                                     Left
                     in
-                    ( Just (inPlace (Interactor id Reverse)), [ Positioned x y (Projectile reversedDirection) ] )
+                    ( Just positionedInteractor, [ Positioned x y (Projectile reversedDirection) ] )
+
+        Arrow dir ->
+            case maybeProjectile of
+                Nothing ->
+                    ( Just positionedInteractor, [] )
+
+                Just _ ->
+                    ( Just positionedInteractor, [ Positioned x y (Projectile dir) ] )
 
 
 updateBoard : Model -> Board

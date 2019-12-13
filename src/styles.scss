@@ -53,6 +53,23 @@ $cell-size: 150px;
     background: url(./assets/images/reverse.gif) no-repeat center center;
     background-size: cover;
   }
+
+  &.interactor-arrow-down, &.interactor-arrow-right, &.interactor-arrow-left, &.interactor-arrow-up  {
+    background: url(./assets/images/arrow.gif) no-repeat center center;
+    background-size: cover;
+  }
+
+  &.interactor-arrow-down {
+    transform: rotate(270deg);
+  }
+
+  &.interactor-arrow-up {
+    transform: rotate(90deg);
+  }
+
+  &.interactor-arrow-right {
+    transform: rotate(180deg);
+  }
 }
 
 .projectile-up, .projectile-down, .projectile-left, .projectile-right {
