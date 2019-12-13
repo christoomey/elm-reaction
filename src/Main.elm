@@ -1,7 +1,8 @@
 module Main exposing (main)
 
 import Browser
-import Html exposing (Html, button, div, span, text)
+import Browser.Events exposing (onAnimationFrameDelta)
+import Html exposing (Html, div, span)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import List.Extra as List
@@ -9,7 +10,7 @@ import List.Extra as List
 
 type Msg
     = Click Position
-    | Tick
+    | Frame Float
 
 
 type alias Position =
@@ -25,12 +26,6 @@ type InteractorKind
     | Two
     | Three
     | Four
-
-
-
--- type Interaction
---     = Clicked Interactor
---     | Collide Projectile Interactor
 
 
 type Positioned a
@@ -63,6 +58,7 @@ type alias Board =
 type alias Model =
     { board : Board
     , dimension : Int
+    , accumulatedTime : Float
     }
 
 
@@ -70,7 +66,6 @@ view : Model -> Html Msg
 view model =
     div []
         [ div [ class "board" ] <| renderableBoard model
-        , button [ onClick Tick ] [ text "Tick" ]
         ]
 
 
@@ -158,7 +153,7 @@ initialBoard =
 
 init : Flags -> ( Model, Cmd Msg )
 init _ =
-    ( { board = initialBoard, dimension = 8 }
+    ( { board = initialBoard, dimension = 8, accumulatedTime = 0 }
     , Cmd.none
     )
 
@@ -209,8 +204,16 @@ update msg model =
             in
             ( { model | board = newBoard }, Cmd.none )
 
-        Tick ->
-            ( { model | board = updateBoard model }, Cmd.none )
+        Frame delta ->
+            let
+                accumulatedTime =
+                    model.accumulatedTime + delta
+            in
+            if accumulatedTime > 200 then
+                ( { model | board = updateBoard model, accumulatedTime = 0 }, Cmd.none )
+
+            else
+                ( { model | accumulatedTime = accumulatedTime }, Cmd.none )
 
 
 interact : Positioned Interactor -> ( Maybe (Positioned Interactor), List (Positioned Projectile) )
@@ -318,11 +321,16 @@ isOffTheScreen x y =
     x < 0 || x > 7 || y < 0 || y > 7
 
 
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+    onAnimationFrameDelta Frame
+
+
 main : Program Flags Model Msg
 main =
     Browser.element
         { init = init
         , view = view
         , update = update
-        , subscriptions = \_ -> Sub.none
+        , subscriptions = subscriptions
         }
