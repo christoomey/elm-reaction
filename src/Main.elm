@@ -235,12 +235,16 @@ initialBoard =
         [ Positioned 0 0 0 { id = 1, kind = One }
         , Positioned 1 2 0 { id = 1, kind = Arrow Down }
         , Positioned 3 7 0 { id = 2, kind = Two }
-        , Positioned 2 6 0 { id = 1, kind = Four }
         , Positioned 4 1 0 { id = 1, kind = Reverse }
         , Positioned 7 7 0 { id = 2, kind = Three }
         , Positioned 6 1 0 { id = 2, kind = Two }
         , Positioned 0 7 0 { id = 2, kind = Reverse }
-        , Positioned 5 6 0 { id = 2, kind = Arrow Right }
+        , Positioned 2 4 0 { id = 1, kind = Four }
+        , Positioned 0 4 0 { id = 1, kind = Four }
+        , Positioned 2 6 0 { id = 1, kind = Four }
+        , Positioned 5 4 0 { id = 2, kind = Arrow Right }
+        , Positioned 5 7 0 { id = 2, kind = Arrow Up }
+        , Positioned 6 3 0 { id = 2, kind = Four }
         ]
     , projectiles = []
     }
