@@ -231,27 +231,22 @@ initialBoard : Board
 initialBoard =
     { interactors =
         [ Positioned 0 0 0 { id = 1, kind = One }
-        , Positioned 1 1 0 { id = 1, kind = Arrow Down }
+        , Positioned 1 2 0 { id = 1, kind = Arrow Down }
+        , Positioned 3 7 0 { id = 2, kind = Two }
         , Positioned 2 6 0 { id = 1, kind = Four }
         , Positioned 4 1 0 { id = 1, kind = Reverse }
         , Positioned 7 7 0 { id = 2, kind = Three }
+        , Positioned 6 1 0 { id = 2, kind = Two }
+        , Positioned 0 7 0 { id = 2, kind = Reverse }
+        , Positioned 5 6 0 { id = 2, kind = Arrow Right }
         ]
-    , projectiles =
-        [ Positioned 2 2 -0.4 (Projectile Right)
-        , Positioned 1 7 0 (Projectile Left)
-        , Positioned 6 4 0 (Projectile Up)
-        , Positioned 6 6 0 (Projectile Down)
-
-        -- , Positioned 4 2 0 (Projectile Down)
-        -- , Positioned 2 1 0 (Projectile Down)
-        -- , Positioned 3 3 0 (Projectile Up)
-        ]
+    , projectiles = []
     }
 
 
 initialModel : Model
 initialModel =
-    { board = initialBoard, dimension = 8, isPaused = True }
+    { board = initialBoard, dimension = 8, isPaused = False }
 
 
 init : Flags -> ( Model, Cmd Msg )
