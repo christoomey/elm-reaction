@@ -51,21 +51,24 @@ $cell-size: 150px;
     background-size: cover;
   }
 
-  &.interactor-arrow-down, &.interactor-arrow-right, &.interactor-arrow-left, &.interactor-arrow-up  {
-    background: url(./assets/images/arrow.gif) no-repeat center center;
+  &.interactor-arrow-left, &.interactor-arrow-right, &.interactor-arrow-left, &.interactor-arrow-up  {
+    background: url(./assets/images/arrowLeft.gif) no-repeat center center;
     background-size: cover;
   }
 
   &.interactor-arrow-down {
-    transform: rotate(270deg);
+    background: url(./assets/images/arrowDown.gif) no-repeat center center;
+    background-size: cover;
   }
 
   &.interactor-arrow-up {
-    transform: rotate(90deg);
+    background: url(./assets/images/arrowUp.gif) no-repeat center center;
+    background-size: cover;
   }
 
   &.interactor-arrow-right {
-    transform: rotate(180deg);
+    background: url(./assets/images/arrowRight.gif) no-repeat center center;
+    background-size: cover;
   }
 }
 
