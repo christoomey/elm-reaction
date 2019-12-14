@@ -36,6 +36,7 @@ type InteractorKind
     | Four
     | Reverse
     | Arrow Direction
+    | Energizer
 
 
 type Positioned a
@@ -192,6 +193,9 @@ interactorClass kind =
         Arrow dir ->
             "interactor-arrow-" ++ directionToString dir
 
+        Energizer ->
+            "interactor-energizer"
+
 
 viewProjectile : Positioned Projectile -> Html Msg
 viewProjectile (Positioned _ _ percentage (Projectile dir)) =
@@ -242,9 +246,10 @@ initialBoard =
         , Positioned 0 7 0 { id = 2, kind = Reverse }
         , Positioned 2 4 0 { id = 1, kind = Four }
         , Positioned 4 7 0 { id = 1, kind = One }
+        , Positioned 3 6 0 { id = 1, kind = Energizer }
         , Positioned 0 4 0 { id = 1, kind = Four }
         , Positioned 2 6 0 { id = 1, kind = Four }
-        , Positioned 3 2 0 { id = 1, kind = Three }
+        , Positioned 3 2 0 { id = 1, kind = Arrow Right }
         , Positioned 5 4 0 { id = 2, kind = Arrow Right }
         , Positioned 5 7 0 { id = 2, kind = Arrow Up }
         , Positioned 6 3 0 { id = 2, kind = Three }
@@ -372,7 +377,13 @@ interact ((Positioned x y _ { id, kind }) as positionedInteractor) maybeProjecti
                 ( Just (inPlace (Interactor id Four)), [] )
 
             Four ->
-                ( Nothing, [ inPlace <| Projectile Up, inPlace <| Projectile Down, inPlace <| Projectile Left, inPlace <| Projectile Right ] )
+                ( Nothing
+                , [ inPlace <| Projectile Up
+                  , inPlace <| Projectile Down
+                  , inPlace <| Projectile Left
+                  , inPlace <| Projectile Right
+                  ]
+                )
 
             Reverse ->
                 case maybeProjectile of
@@ -405,6 +416,14 @@ interact ((Positioned x y _ { id, kind }) as positionedInteractor) maybeProjecti
                     Just _ ->
                         ( Just positionedInteractor, [ Positioned x y 0 (Projectile dir) ] )
 
+            Energizer ->
+                case maybeProjectile of
+                    Nothing ->
+                        ( Just positionedInteractor, [] )
+
+                    Just (Positioned _ _ _ (Projectile dir)) ->
+                        ( Just positionedInteractor, List.map (\d -> Positioned x y 0 (Projectile d)) <| withLateralDirections dir )
+
     else
         case maybeProjectile of
             Nothing ->
@@ -412,6 +431,22 @@ interact ((Positioned x y _ { id, kind }) as positionedInteractor) maybeProjecti
 
             Just positionedProjectile ->
                 ( Just positionedInteractor, [ positionedProjectile ] )
+
+
+withLateralDirections : Direction -> List Direction
+withLateralDirections direction =
+    case direction of
+        Up ->
+            [ Up, Left, Right ]
+
+        Down ->
+            [ Down, Left, Right ]
+
+        Right ->
+            [ Up, Down, Right ]
+
+        Left ->
+            [ Up, Left, Down ]
 
 
 updateBoard : Model -> Board
