@@ -14,7 +14,7 @@ percentagePerTick =
 
 
 type Msg
-    = Click Position
+    = Click (Positioned Interactor)
     | Frame Float
     | Tick
     | Reset
@@ -168,8 +168,8 @@ viewCell board ( x, y ) =
         Nothing ->
             div [ class "cell cell-empty" ] renderedProjectiles
 
-        Just (Positioned _ _ _ interactor) ->
-            div [ onClick (Click ( x, y )), class <| "cell " ++ interactorClass interactor.kind ] <| renderedProjectiles
+        Just ((Positioned _ _ _ { kind }) as positionedInteractor) ->
+            div [ onClick (Click positionedInteractor), class <| "cell " ++ interactorClass kind ] <| renderedProjectiles
 
 
 interactorClass : InteractorKind -> String
@@ -281,58 +281,38 @@ elementIsAtPosition ( x, y ) (Positioned px py _ _) =
     px == x && py == y
 
 
-handleClick : Position -> Model -> ( Model, Cmd Msg )
-handleClick ( x, y ) model =
+handleClick : Positioned Interactor -> Model -> ( Model, Cmd Msg )
+handleClick ((Positioned x y _ _) as positionedInteractor) ({ board } as model) =
     let
-        board =
-            model.board
-
-        mInteractor =
-            List.find (elementIsAtPosition ( x, y )) board.interactors
-
         ( updatedMaybeInteractor, projectiles ) =
-            case mInteractor of
-                Nothing ->
-                    ( Nothing, [] )
-
-                Just interactor ->
-                    interact interactor Nothing
-
-        newCount =
-            case mInteractor of
-                Nothing ->
-                    model.clickCount
-
-                Just _ ->
-                    model.clickCount + 1
+            interact positionedInteractor Nothing
 
         updatedInteractors =
             case updatedMaybeInteractor of
                 Nothing ->
                     List.filter (not << elementIsAtPosition ( x, y )) board.interactors
 
-                Just interactor ->
-                    List.updateIf (elementIsAtPosition ( x, y )) (always interactor) board.interactors
+                Just newInteractor ->
+                    List.updateIf (elementIsAtPosition ( x, y )) (always newInteractor) board.interactors
 
         updatedProjectiles =
             List.append projectiles board.projectiles
 
-        newBoard : Board
         newBoard =
             { board | interactors = updatedInteractors, projectiles = updatedProjectiles }
     in
-    ( { model | board = newBoard, clickCount = newCount }, Cmd.none )
+    ( { model | board = newBoard, clickCount = model.clickCount + 1 }, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Click pos ->
+        Click positionedInteractor ->
             if model.isPaused then
                 ( model, Cmd.none )
 
             else
-                handleClick pos model
+                handleClick positionedInteractor model
 
         Frame _ ->
             if model.isPaused then
