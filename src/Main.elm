@@ -109,21 +109,7 @@ isComplete board =
 
 isClickable : InteractorKind -> Bool
 isClickable kind =
-    case kind of
-        One ->
-            True
-
-        Two ->
-            True
-
-        Three ->
-            True
-
-        Four ->
-            True
-
-        _ ->
-            False
+    List.member kind [ One, Two, Three, Four ]
 
 
 tickButton : Html Msg
@@ -169,32 +155,36 @@ viewCell board ( x, y ) =
             div [ class "cell cell-empty" ] renderedProjectiles
 
         Just ((Positioned _ _ _ { kind }) as positionedInteractor) ->
-            div [ onClick (Click positionedInteractor), class <| "cell " ++ interactorClass kind ] <| renderedProjectiles
+            if isClickable kind then
+                div [ onClick (Click positionedInteractor), interactorClass kind ] renderedProjectiles
+
+            else
+                div [ interactorClass kind ] renderedProjectiles
 
 
-interactorClass : InteractorKind -> String
+interactorClass : InteractorKind -> Html.Attribute Msg
 interactorClass kind =
     case kind of
         One ->
-            "interactor-one"
+            class "cell interactor-one"
 
         Two ->
-            "interactor-two"
+            class "cell interactor-two"
 
         Three ->
-            "interactor-three"
+            class "cell interactor-three"
 
         Four ->
-            "interactor-four"
+            class "cell interactor-four"
 
         Reverse ->
-            "interactor-reverse"
+            class "cell interactor-reverse"
 
         Arrow dir ->
-            "interactor-arrow-" ++ directionToString dir
+            class <| "cell interactor-arrow-" ++ directionToString dir
 
         Energizer ->
-            "interactor-energizer"
+            class "cell interactor-energizer"
 
 
 viewProjectile : Positioned Projectile -> Html Msg
@@ -331,21 +321,39 @@ update msg model =
             ( { model | isPaused = not model.isPaused }, Cmd.none )
 
 
+reversedDirection : Direction -> Direction
+reversedDirection direction =
+    case direction of
+        Up ->
+            Down
+
+        Down ->
+            Up
+
+        Left ->
+            Right
+
+        Right ->
+            Left
+
+
+shouldInteract : Maybe (Positioned Projectile) -> Bool
+shouldInteract maybeProjectile =
+    case maybeProjectile of
+        Nothing ->
+            True
+
+        Just (Positioned _ _ percentage _) ->
+            percentage < 0.01 && percentage > -0.01
+
+
 interact : Positioned Interactor -> Maybe (Positioned Projectile) -> ( Maybe (Positioned Interactor), List (Positioned Projectile) )
 interact ((Positioned x y _ { id, kind }) as positionedInteractor) maybeProjectile =
     let
         inPlace =
             Positioned x y 0
-
-        shouldInteract =
-            case maybeProjectile of
-                Nothing ->
-                    True
-
-                Just (Positioned _ _ percentage _) ->
-                    percentage < 0.01 && percentage > -0.01
     in
-    if shouldInteract then
+    if shouldInteract maybeProjectile then
         case kind of
             One ->
                 ( Just (inPlace (Interactor id Two)), [] )
@@ -357,13 +365,7 @@ interact ((Positioned x y _ { id, kind }) as positionedInteractor) maybeProjecti
                 ( Just (inPlace (Interactor id Four)), [] )
 
             Four ->
-                ( Nothing
-                , [ inPlace <| Projectile Up
-                  , inPlace <| Projectile Down
-                  , inPlace <| Projectile Left
-                  , inPlace <| Projectile Right
-                  ]
-                )
+                ( Nothing, List.map (Projectile >> inPlace) [ Up, Down, Left, Right ] )
 
             Reverse ->
                 case maybeProjectile of
@@ -371,22 +373,7 @@ interact ((Positioned x y _ { id, kind }) as positionedInteractor) maybeProjecti
                         ( Just positionedInteractor, [] )
 
                     Just (Positioned _ _ _ (Projectile dir)) ->
-                        let
-                            reversedDirection =
-                                case dir of
-                                    Up ->
-                                        Down
-
-                                    Down ->
-                                        Up
-
-                                    Left ->
-                                        Right
-
-                                    Right ->
-                                        Left
-                        in
-                        ( Just positionedInteractor, [ Positioned x y 0 (Projectile reversedDirection) ] )
+                        ( Just positionedInteractor, [ inPlace (Projectile <| reversedDirection dir) ] )
 
             Arrow dir ->
                 case maybeProjectile of
@@ -394,7 +381,7 @@ interact ((Positioned x y _ { id, kind }) as positionedInteractor) maybeProjecti
                         ( Just positionedInteractor, [] )
 
                     Just _ ->
-                        ( Just positionedInteractor, [ Positioned x y 0 (Projectile dir) ] )
+                        ( Just positionedInteractor, [ inPlace (Projectile dir) ] )
 
             Energizer ->
                 case maybeProjectile of
@@ -402,7 +389,7 @@ interact ((Positioned x y _ { id, kind }) as positionedInteractor) maybeProjecti
                         ( Just positionedInteractor, [] )
 
                     Just (Positioned _ _ _ (Projectile dir)) ->
-                        ( Just positionedInteractor, List.map (\d -> Positioned x y 0 (Projectile d)) <| withLateralDirections dir )
+                        ( Just positionedInteractor, List.map (Projectile >> inPlace) (withLateralDirections dir) )
 
     else
         case maybeProjectile of
