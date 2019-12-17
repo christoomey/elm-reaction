@@ -92,6 +92,11 @@ $max-width: 60rem;
     background: url(./assets/images/energizer.gif) no-repeat center center;
     background-size: cover;
   }
+
+  &.interactor-black-hole {
+    background: url(./assets/images/blackHole.gif) no-repeat center center;
+    background-size: cover;
+  }
 }
 
 .projectile-up, .projectile-down, .projectile-left, .projectile-right {

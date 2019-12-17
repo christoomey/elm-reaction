@@ -37,6 +37,7 @@ type InteractorKind
     | Reverse
     | Arrow Direction
     | Energizer
+    | BlackHole
 
 
 type Positioned a
@@ -190,6 +191,9 @@ interactorClass kind =
         Energizer ->
             class "cell interactor-energizer"
 
+        BlackHole ->
+            class "cell interactor-black-hole"
+
 
 viewProjectile : Positioned Projectile -> Html Msg
 viewProjectile (Positioned _ _ percentage (Projectile dir)) =
@@ -232,6 +236,7 @@ initialBoard =
     { interactors =
         [ Positioned 0 0 0 { id = 1, kind = Three }
         , Positioned 1 2 0 { id = 1, kind = Arrow Down }
+        , Positioned 6 5 0 { id = 1, kind = BlackHole }
         , Positioned 3 7 0 { id = 2, kind = Two }
         , Positioned 4 1 0 { id = 1, kind = Reverse }
         , Positioned 7 6 0 { id = 2, kind = Three }
@@ -386,6 +391,9 @@ interact ((Positioned x y _ { id, kind }) as positionedInteractor) maybeProjecti
 
                     Just (Positioned _ _ _ (Projectile dir)) ->
                         ( Just positionedInteractor, List.map (Projectile >> inPlace) (withLateralDirections dir) )
+
+            BlackHole ->
+                ( Just positionedInteractor, [] )
 
     else
         case maybeProjectile of
