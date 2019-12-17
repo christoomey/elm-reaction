@@ -44,10 +44,8 @@ type Positioned a
     = Positioned Int Int Float a
 
 
-type alias Interactor =
-    { id : Int
-    , kind : InteractorKind
-    }
+type Interactor
+    = Interactor InteractorKind
 
 
 type Direction
@@ -109,7 +107,7 @@ controls model =
 
 isComplete : Board -> Bool
 isComplete board =
-    not <| List.any (\(Positioned _ _ _ { kind }) -> isClickable kind) board.interactors
+    not <| List.any (\(Positioned _ _ _ (Interactor kind)) -> isClickable kind) board.interactors
 
 
 isClickable : InteractorKind -> Bool
@@ -159,7 +157,7 @@ viewCell board ( x, y ) =
         Nothing ->
             div [ class "cell cell-empty" ] renderedProjectiles
 
-        Just ((Positioned _ _ _ { kind }) as positionedInteractor) ->
+        Just ((Positioned _ _ _ (Interactor kind)) as positionedInteractor) ->
             if isClickable kind then
                 div [ onClick (Click positionedInteractor), interactorClass kind ] renderedProjectiles
 
@@ -234,32 +232,32 @@ directionToString direction =
 initialBoard : Board
 initialBoard =
     { interactors =
-        [ Positioned 0 0 0 { id = 1, kind = Three }
-        , Positioned 1 2 0 { id = 1, kind = Arrow Down }
-        , Positioned 6 5 0 { id = 1, kind = BlackHole }
-        , Positioned 3 7 0 { id = 2, kind = Two }
-        , Positioned 4 1 0 { id = 1, kind = Reverse }
-        , Positioned 7 6 0 { id = 2, kind = Three }
-        , Positioned 7 6 0 { id = 2, kind = Arrow Up }
-        , Positioned 6 1 0 { id = 2, kind = Two }
-        , Positioned 0 7 0 { id = 2, kind = Reverse }
-        , Positioned 2 4 0 { id = 1, kind = Four }
-        , Positioned 4 7 0 { id = 1, kind = One }
-        , Positioned 3 6 0 { id = 1, kind = Energizer }
-        , Positioned 0 4 0 { id = 1, kind = Four }
-        , Positioned 2 6 0 { id = 1, kind = Four }
-        , Positioned 3 2 0 { id = 1, kind = Arrow Right }
-        , Positioned 5 4 0 { id = 2, kind = Arrow Right }
-        , Positioned 5 7 0 { id = 2, kind = Arrow Up }
-        , Positioned 6 3 0 { id = 2, kind = Three }
-        , Positioned 1 4 0 { id = 1, kind = Three }
-        , Positioned 2 5 0 { id = 1, kind = Three }
-        , Positioned 7 4 0 { id = 2, kind = Arrow Right }
-        , Positioned 5 7 0 { id = 2, kind = Arrow Up }
-        , Positioned 4 4 0 { id = 2, kind = Four }
-        , Positioned 6 0 0 { id = 1, kind = Arrow Right }
-        , Positioned 7 2 0 { id = 1, kind = Four }
-        , Positioned 2 0 0 { id = 1, kind = Arrow Down }
+        [ Positioned 0 0 0 (Interactor Three)
+        , Positioned 1 2 0 (Interactor (Arrow Down))
+        , Positioned 6 5 0 (Interactor BlackHole)
+        , Positioned 3 7 0 (Interactor Two)
+        , Positioned 4 1 0 (Interactor Reverse)
+        , Positioned 7 6 0 (Interactor Three)
+        , Positioned 7 6 0 (Interactor (Arrow Up))
+        , Positioned 6 1 0 (Interactor Two)
+        , Positioned 0 7 0 (Interactor Reverse)
+        , Positioned 2 4 0 (Interactor Four)
+        , Positioned 4 7 0 (Interactor One)
+        , Positioned 3 6 0 (Interactor Energizer)
+        , Positioned 0 4 0 (Interactor Four)
+        , Positioned 2 6 0 (Interactor Four)
+        , Positioned 3 2 0 (Interactor (Arrow Right))
+        , Positioned 5 4 0 (Interactor (Arrow Right))
+        , Positioned 5 7 0 (Interactor (Arrow Up))
+        , Positioned 6 3 0 (Interactor Three)
+        , Positioned 1 4 0 (Interactor Three)
+        , Positioned 2 5 0 (Interactor Three)
+        , Positioned 7 4 0 (Interactor (Arrow Right))
+        , Positioned 5 7 0 (Interactor (Arrow Up))
+        , Positioned 4 4 0 (Interactor Four)
+        , Positioned 6 0 0 (Interactor (Arrow Right))
+        , Positioned 7 2 0 (Interactor Four)
+        , Positioned 2 0 0 (Interactor (Arrow Down))
         ]
     , projectiles = []
     }
@@ -349,7 +347,7 @@ shouldInteract maybeProjectile =
 
 
 interact : Positioned Interactor -> Maybe (Positioned Projectile) -> CellState
-interact ((Positioned x y _ { id, kind }) as positionedInteractor) maybeProjectile =
+interact ((Positioned x y _ (Interactor kind)) as positionedInteractor) maybeProjectile =
     let
         inPlace =
             Positioned x y 0
@@ -357,13 +355,13 @@ interact ((Positioned x y _ { id, kind }) as positionedInteractor) maybeProjecti
     if shouldInteract maybeProjectile then
         case kind of
             One ->
-                ( Just (inPlace (Interactor id Two)), [] )
+                ( Just (inPlace (Interactor Two)), [] )
 
             Two ->
-                ( Just (inPlace (Interactor id Three)), [] )
+                ( Just (inPlace (Interactor Three)), [] )
 
             Three ->
-                ( Just (inPlace (Interactor id Four)), [] )
+                ( Just (inPlace (Interactor Four)), [] )
 
             Four ->
                 ( Nothing, List.map (Projectile >> inPlace) [ Up, Down, Left, Right ] )
