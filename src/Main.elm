@@ -74,6 +74,10 @@ type alias Model =
     }
 
 
+type alias CellState =
+    ( Maybe (Positioned Interactor), List (Positioned Projectile) )
+
+
 view : Model -> Html Msg
 view model =
     div []
@@ -258,7 +262,7 @@ initialBoard =
 
 initialModel : Model
 initialModel =
-    { board = initialBoard, dimension = 8, isPaused = False, clickCount = 0 }
+    { board = initialBoard, dimension = 8, isPaused = True, clickCount = 0 }
 
 
 init : Flags -> ( Model, Cmd Msg )
@@ -298,18 +302,10 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Click positionedInteractor ->
-            if model.isPaused then
-                ( model, Cmd.none )
-
-            else
-                handleClick positionedInteractor model
+            handleClick positionedInteractor model
 
         Frame _ ->
-            if model.isPaused then
-                ( model, Cmd.none )
-
-            else
-                ( { model | board = updateBoard model }, Cmd.none )
+            ( { model | board = updateBoard model }, Cmd.none )
 
         Tick ->
             ( { model | board = updateBoard model }, Cmd.none )
@@ -347,7 +343,7 @@ shouldInteract maybeProjectile =
             percentage < 0.01 && percentage > -0.01
 
 
-interact : Positioned Interactor -> Maybe (Positioned Projectile) -> ( Maybe (Positioned Interactor), List (Positioned Projectile) )
+interact : Positioned Interactor -> Maybe (Positioned Projectile) -> CellState
 interact ((Positioned x y _ { id, kind }) as positionedInteractor) maybeProjectile =
     let
         inPlace =
@@ -416,49 +412,54 @@ withLateralDirections direction =
             [ Up, Left, Down ]
 
 
-updateBoard : Model -> Board
-updateBoard { dimension, board } =
+grid : Int -> List Position
+grid dimension =
     let
-        updatedProjectiles : List (Positioned Projectile)
-        updatedProjectiles =
-            List.filterMap updateProjectile board.projectiles
-
-        range : List Int
         range =
             List.range 0 <| dimension - 1
+    in
+    List.andThen (\x -> List.map (Tuple.pair x) range) range
 
-        grid : List Position
-        grid =
-            List.andThen (\x -> List.map (Tuple.pair x) range) range
 
-        updatedCells : List ( Maybe (Positioned Interactor), List (Positioned Projectile) )
+getCell : Board -> ( Int, Int ) -> CellState
+getCell board ( x, y ) =
+    ( List.find (elementIsAtPosition ( x, y )) board.interactors
+    , List.filter (elementIsAtPosition ( x, y )) board.projectiles
+    )
+
+
+updateBoard : Model -> Board
+updateBoard { board, dimension } =
+    let
+        movedProjectiles =
+            List.filterMap updateProjectile board.projectiles
+
+        cells =
+            List.map (getCell { board | projectiles = movedProjectiles }) (grid dimension)
+
         updatedCells =
-            List.map (updateCell { board | projectiles = updatedProjectiles }) grid
+            List.map updateCell cells
 
-        updatedInteractors : List (Positioned Interactor)
         updatedInteractors =
             List.filterMap Tuple.first updatedCells
 
-        positionedProjectiles : List (Positioned Projectile)
         positionedProjectiles =
             List.concatMap Tuple.second updatedCells
     in
     { board | projectiles = positionedProjectiles, interactors = updatedInteractors }
 
 
-updateCell : Board -> Position -> ( Maybe (Positioned Interactor), List (Positioned Projectile) )
-updateCell board ( x, y ) =
-    let
-        mInteractor =
-            List.find (elementIsAtPosition ( x, y )) board.interactors
+updateCell : CellState -> CellState
+updateCell ( mInteractor, projectiles ) =
+    case mInteractor of
+        Just positionedInteractor ->
+            List.foldl collide ( Just positionedInteractor, [] ) projectiles
 
-        projectiles =
-            List.filter (elementIsAtPosition ( x, y )) board.projectiles
-    in
-    List.foldl collide ( mInteractor, [] ) projectiles
+        Nothing ->
+            ( mInteractor, projectiles )
 
 
-collide : Positioned Projectile -> ( Maybe (Positioned Interactor), List (Positioned Projectile) ) -> ( Maybe (Positioned Interactor), List (Positioned Projectile) )
+collide : Positioned Projectile -> CellState -> CellState
 collide projectile ( mInteractor, projectiles ) =
     case mInteractor of
         Nothing ->
@@ -534,8 +535,12 @@ isOffTheScreen x y =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions _ =
-    onAnimationFrameDelta Frame
+subscriptions { isPaused } =
+    if isPaused then
+        Sub.none
+
+    else
+        onAnimationFrameDelta Frame
 
 
 main : Program Flags Model Msg
