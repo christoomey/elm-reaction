@@ -267,7 +267,7 @@ initialBoard =
 
 initialModel : Model
 initialModel =
-    { board = initialBoard, dimension = 8, isPaused = True, clickCount = 0 }
+    { board = initialBoard, dimension = 8, isPaused = False, clickCount = 0 }
 
 
 init : Flags -> ( Model, Cmd Msg )
