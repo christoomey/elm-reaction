@@ -14,7 +14,7 @@ percentagePerTick =
 
 
 type Msg
-    = Click (Positioned Interactor)
+    = Click Interactor
     | Frame Float
     | Tick
     | Reset
@@ -29,23 +29,19 @@ type alias Flags =
     {}
 
 
-type InteractorKind
+type CoreSize
     = One
     | Two
     | Three
     | Four
-    | Reverse
-    | Arrow Direction
-    | Energizer
-    | BlackHole
-
-
-type Positioned a
-    = Positioned Int Int Float a
 
 
 type Interactor
-    = Interactor InteractorKind
+    = Core CoreSize Position
+    | Reverse Position
+    | Arrow Direction Position
+    | Energizer Position
+    | BlackHole Position
 
 
 type Direction
@@ -56,12 +52,12 @@ type Direction
 
 
 type Projectile
-    = Projectile Direction
+    = Projectile Direction Position Float
 
 
 type alias Board =
-    { interactors : List (Positioned Interactor)
-    , projectiles : List (Positioned Projectile)
+    { interactors : List Interactor
+    , projectiles : List Projectile
     }
 
 
@@ -74,7 +70,7 @@ type alias Model =
 
 
 type alias CellState =
-    ( Maybe (Positioned Interactor), List (Positioned Projectile) )
+    ( Maybe Interactor, List Projectile )
 
 
 view : Model -> Html Msg
@@ -107,12 +103,17 @@ controls model =
 
 isComplete : Board -> Bool
 isComplete board =
-    not <| List.any (\(Positioned _ _ _ (Interactor kind)) -> isClickable kind) board.interactors
+    not <| List.any isClickable board.interactors
 
 
-isClickable : InteractorKind -> Bool
-isClickable kind =
-    List.member kind [ One, Two, Three, Four ]
+isClickable : Interactor -> Bool
+isClickable interactor =
+    case interactor of
+        Core _ _ ->
+            True
+
+        _ ->
+            False
 
 
 tickButton : Html Msg
@@ -145,10 +146,10 @@ viewCell : Board -> Position -> Html Msg
 viewCell board ( x, y ) =
     let
         mInteractor =
-            List.find (elementIsAtPosition ( x, y )) board.interactors
+            List.find (interactorIsAtPosition ( x, y )) board.interactors
 
         projectiles =
-            List.filter (elementIsAtPosition ( x, y )) board.projectiles
+            List.filter (projectileIsAtPosition ( x, y )) board.projectiles
 
         renderedProjectiles =
             List.map viewProjectile projectiles
@@ -157,44 +158,51 @@ viewCell board ( x, y ) =
         Nothing ->
             div [ class "cell cell-empty" ] renderedProjectiles
 
-        Just ((Positioned _ _ _ (Interactor kind)) as positionedInteractor) ->
-            if isClickable kind then
-                div [ onClick (Click positionedInteractor), interactorClass kind ] renderedProjectiles
+        Just interactor ->
+            if isClickable interactor then
+                div [ onClick (Click interactor), interactorClass interactor ] renderedProjectiles
 
             else
-                div [ interactorClass kind ] renderedProjectiles
+                div [ interactorClass interactor ] renderedProjectiles
 
 
-interactorClass : InteractorKind -> Html.Attribute Msg
-interactorClass kind =
-    case kind of
+coreSizeToString : CoreSize -> String
+coreSizeToString coreSize =
+    case coreSize of
         One ->
-            class "cell interactor-one"
+            "one"
 
         Two ->
-            class "cell interactor-two"
+            "two"
 
         Three ->
-            class "cell interactor-three"
+            "three"
 
         Four ->
-            class "cell interactor-four"
+            "Four"
 
-        Reverse ->
+
+interactorClass : Interactor -> Html.Attribute Msg
+interactorClass interactor =
+    case interactor of
+        Core size _ ->
+            class <| "cell interactor-" ++ coreSizeToString size
+
+        Reverse _ ->
             class "cell interactor-reverse"
 
-        Arrow dir ->
+        Arrow dir _ ->
             class <| "cell interactor-arrow-" ++ directionToString dir
 
-        Energizer ->
+        Energizer _ ->
             class "cell interactor-energizer"
 
-        BlackHole ->
+        BlackHole _ ->
             class "cell interactor-black-hole"
 
 
-viewProjectile : Positioned Projectile -> Html Msg
-viewProjectile (Positioned _ _ percentage (Projectile dir)) =
+viewProjectile : Projectile -> Html Msg
+viewProjectile (Projectile dir _ percentage) =
     let
         positioning =
             case dir of
@@ -232,32 +240,32 @@ directionToString direction =
 initialBoard : Board
 initialBoard =
     { interactors =
-        [ Positioned 0 0 0 (Interactor Three)
-        , Positioned 1 2 0 (Interactor (Arrow Down))
-        , Positioned 6 5 0 (Interactor BlackHole)
-        , Positioned 3 7 0 (Interactor Two)
-        , Positioned 4 1 0 (Interactor Reverse)
-        , Positioned 7 6 0 (Interactor Three)
-        , Positioned 7 6 0 (Interactor (Arrow Up))
-        , Positioned 6 1 0 (Interactor Two)
-        , Positioned 0 7 0 (Interactor Reverse)
-        , Positioned 2 4 0 (Interactor Four)
-        , Positioned 4 7 0 (Interactor One)
-        , Positioned 3 6 0 (Interactor Energizer)
-        , Positioned 0 4 0 (Interactor Four)
-        , Positioned 2 6 0 (Interactor Four)
-        , Positioned 3 2 0 (Interactor (Arrow Right))
-        , Positioned 5 4 0 (Interactor (Arrow Right))
-        , Positioned 5 7 0 (Interactor (Arrow Up))
-        , Positioned 6 3 0 (Interactor Three)
-        , Positioned 1 4 0 (Interactor Three)
-        , Positioned 2 5 0 (Interactor Three)
-        , Positioned 7 4 0 (Interactor (Arrow Right))
-        , Positioned 5 7 0 (Interactor (Arrow Up))
-        , Positioned 4 4 0 (Interactor Four)
-        , Positioned 6 0 0 (Interactor (Arrow Right))
-        , Positioned 7 2 0 (Interactor Four)
-        , Positioned 2 0 0 (Interactor (Arrow Down))
+        [ Core Three ( 0, 0 )
+        , Arrow Down ( 1, 2 )
+        , BlackHole ( 6, 5 )
+        , Core Two ( 3, 7 )
+        , Reverse ( 4, 1 )
+        , Core Three ( 7, 6 )
+        , Arrow Up ( 7, 6 )
+        , Core Two ( 6, 1 )
+        , Reverse ( 0, 7 )
+        , Core Four ( 2, 4 )
+        , Core One ( 4, 7 )
+        , Energizer ( 3, 6 )
+        , Core Four ( 0, 4 )
+        , Core Four ( 2, 6 )
+        , Arrow Right ( 3, 2 )
+        , Arrow Right ( 5, 4 )
+        , Arrow Up ( 5, 7 )
+        , Core Three ( 6, 3 )
+        , Core Three ( 1, 4 )
+        , Core Three ( 2, 5 )
+        , Arrow Right ( 7, 4 )
+        , Arrow Up ( 5, 7 )
+        , Core Four ( 4, 4 )
+        , Arrow Right ( 6, 0 )
+        , Core Four ( 7, 2 )
+        , Arrow Down ( 2, 0 )
         ]
     , projectiles = []
     }
@@ -273,24 +281,52 @@ init _ =
     ( initialModel, Cmd.none )
 
 
-elementIsAtPosition : Position -> Positioned a -> Bool
-elementIsAtPosition ( x, y ) (Positioned px py _ _) =
-    px == x && py == y
+projectileIsAtPosition : Position -> Projectile -> Bool
+projectileIsAtPosition ( x, y ) (Projectile _ ( px, py ) _) =
+    x == px && y == py
 
 
-handleClick : Positioned Interactor -> Model -> ( Model, Cmd Msg )
-handleClick ((Positioned x y _ _) as positionedInteractor) ({ board } as model) =
+interactorIsAtPosition : Position -> Interactor -> Bool
+interactorIsAtPosition ( x, y ) interactor =
+    let
+        ( ix, iy ) =
+            getInteractorPosition interactor
+    in
+    x == ix && y == iy
+
+
+getInteractorPosition : Interactor -> Position
+getInteractorPosition interactor =
+    case interactor of
+        Core _ pos ->
+            pos
+
+        Arrow _ pos ->
+            pos
+
+        BlackHole pos ->
+            pos
+
+        Reverse pos ->
+            pos
+
+        Energizer pos ->
+            pos
+
+
+handleClick : Interactor -> Model -> ( Model, Cmd Msg )
+handleClick interactor ({ board } as model) =
     let
         ( updatedMaybeInteractor, projectiles ) =
-            interact positionedInteractor Nothing
+            interact interactor Nothing
 
         updatedInteractors =
             case updatedMaybeInteractor of
                 Nothing ->
-                    List.filter (not << elementIsAtPosition ( x, y )) board.interactors
+                    List.filter (not << interactorIsAtPosition (getInteractorPosition interactor)) board.interactors
 
                 Just newInteractor ->
-                    List.updateIf (elementIsAtPosition ( x, y )) (always newInteractor) board.interactors
+                    List.updateIf (interactorIsAtPosition (getInteractorPosition interactor)) (always newInteractor) board.interactors
 
         updatedProjectiles =
             List.append projectiles board.projectiles
@@ -336,70 +372,66 @@ reversedDirection direction =
             Left
 
 
-shouldInteract : Maybe (Positioned Projectile) -> Bool
+shouldInteract : Maybe Projectile -> Bool
 shouldInteract maybeProjectile =
     case maybeProjectile of
         Nothing ->
             True
 
-        Just (Positioned _ _ percentage _) ->
+        Just (Projectile _ _ percentage) ->
             percentage < 0.01 && percentage > -0.01
 
 
-interact : Positioned Interactor -> Maybe (Positioned Projectile) -> CellState
-interact ((Positioned x y _ (Interactor kind)) as positionedInteractor) maybeProjectile =
-    let
-        inPlace =
-            Positioned x y 0
-    in
+interact : Interactor -> Maybe Projectile -> CellState
+interact interactor maybeProjectile =
     if shouldInteract maybeProjectile then
-        case kind of
-            One ->
-                ( Just (inPlace (Interactor Two)), [] )
+        case interactor of
+            Core One position ->
+                ( Just (Core Two position), [] )
 
-            Two ->
-                ( Just (inPlace (Interactor Three)), [] )
+            Core Two position ->
+                ( Just (Core Three position), [] )
 
-            Three ->
-                ( Just (inPlace (Interactor Four)), [] )
+            Core Three position ->
+                ( Just (Core Four position), [] )
 
-            Four ->
-                ( Nothing, List.map (Projectile >> inPlace) [ Up, Down, Left, Right ] )
+            Core Four position ->
+                ( Nothing, List.map (\dir -> Projectile dir position 0) [ Up, Down, Left, Right ] )
 
-            Reverse ->
+            Reverse position ->
                 case maybeProjectile of
                     Nothing ->
-                        ( Just positionedInteractor, [] )
+                        ( Just interactor, [] )
 
-                    Just (Positioned _ _ _ (Projectile dir)) ->
-                        ( Just positionedInteractor, [ inPlace (Projectile <| reversedDirection dir) ] )
+                    Just (Projectile dir _ _) ->
+                        ( Just interactor, [ Projectile (reversedDirection dir) position 0 ] )
 
-            Arrow dir ->
+            Arrow dir position ->
                 case maybeProjectile of
                     Nothing ->
-                        ( Just positionedInteractor, [] )
+                        ( Just interactor, [] )
 
                     Just _ ->
-                        ( Just positionedInteractor, [ inPlace (Projectile dir) ] )
+                        ( Just interactor, [ Projectile dir position 0 ] )
 
-            Energizer ->
+            Energizer position ->
                 case maybeProjectile of
                     Nothing ->
-                        ( Just positionedInteractor, [] )
+                        ( Just interactor, [] )
 
-                    Just (Positioned _ _ _ (Projectile dir)) ->
-                        ( Just positionedInteractor, List.map (Projectile >> inPlace) (withLateralDirections dir) )
+                    Just (Projectile dir _ _) ->
+                        ( Just interactor, List.map (\newDir -> Projectile newDir position 0) (withLateralDirections dir) )
 
-            BlackHole ->
-                ( Just positionedInteractor, [] )
+            BlackHole _ ->
+                ( Just interactor, [] )
 
     else
         case maybeProjectile of
             Nothing ->
-                ( Just positionedInteractor, [] )
+                ( Just interactor, [] )
 
-            Just positionedProjectile ->
-                ( Just positionedInteractor, [ positionedProjectile ] )
+            Just projectile ->
+                ( Just interactor, [ projectile ] )
 
 
 withLateralDirections : Direction -> List Direction
@@ -427,10 +459,10 @@ grid dimension =
     List.andThen (\x -> List.map (Tuple.pair x) range) range
 
 
-getCell : Board -> ( Int, Int ) -> CellState
+getCell : Board -> Position -> CellState
 getCell board ( x, y ) =
-    ( List.find (elementIsAtPosition ( x, y )) board.interactors
-    , List.filter (elementIsAtPosition ( x, y )) board.projectiles
+    ( List.find (interactorIsAtPosition ( x, y )) board.interactors
+    , List.filter (projectileIsAtPosition ( x, y )) board.projectiles
     )
 
 
@@ -465,7 +497,7 @@ updateCell ( mInteractor, projectiles ) =
             ( mInteractor, projectiles )
 
 
-collide : Positioned Projectile -> CellState -> CellState
+collide : Projectile -> CellState -> CellState
 collide projectile ( mInteractor, projectiles ) =
     case mInteractor of
         Nothing ->
@@ -479,12 +511,12 @@ collide projectile ( mInteractor, projectiles ) =
             ( newMInteractor, List.append newProjectiles projectiles )
 
 
-updateProjectile : Positioned Projectile -> Maybe (Positioned Projectile)
-updateProjectile (Positioned x y percentage projectile) =
+updateProjectile : Projectile -> Maybe Projectile
+updateProjectile (Projectile direction ( x, y ) percentage) =
     let
         ( newX, newY, newPercentage ) =
-            case projectile of
-                Projectile Up ->
+            case direction of
+                Up ->
                     let
                         tempNewPercentage =
                             percentage - percentagePerTick
@@ -495,7 +527,7 @@ updateProjectile (Positioned x y percentage projectile) =
                     else
                         ( x, y, tempNewPercentage )
 
-                Projectile Left ->
+                Left ->
                     let
                         tempNewPercentage =
                             percentage - percentagePerTick
@@ -506,7 +538,7 @@ updateProjectile (Positioned x y percentage projectile) =
                     else
                         ( x, y, tempNewPercentage )
 
-                Projectile Down ->
+                Down ->
                     let
                         tempNewPercentage =
                             percentage + percentagePerTick
@@ -517,7 +549,7 @@ updateProjectile (Positioned x y percentage projectile) =
                     else
                         ( x, y, tempNewPercentage )
 
-                Projectile Right ->
+                Right ->
                     let
                         tempNewPercentage =
                             percentage + percentagePerTick
@@ -532,7 +564,7 @@ updateProjectile (Positioned x y percentage projectile) =
         Nothing
 
     else
-        Just (Positioned newX newY newPercentage projectile)
+        Just (Projectile direction ( newX, newY ) newPercentage)
 
 
 isOffTheScreen : Int -> Int -> Bool
