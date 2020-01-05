@@ -3,7 +3,7 @@ module Main exposing (main)
 import Browser
 import Browser.Events exposing (onAnimationFrameDelta)
 import Html exposing (Html, a, button, details, div, h3, li, p, span, strong, summary, text, ul)
-import Html.Attributes exposing (attribute, class, href, style)
+import Html.Attributes exposing (class, href, style)
 import Html.Events exposing (onClick)
 import List.Extra as List
 
@@ -84,7 +84,7 @@ view model =
 
 gameSummary : Html Msg
 gameSummary =
-    details [ class "game-summary", attribute "open" "" ]
+    details [ class "game-summary" ]
         [ summary [] [ text "Game notes" ]
         , p []
             [ text "This game was build as part of "
