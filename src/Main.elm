@@ -88,7 +88,7 @@ gameSummary =
         [ summary [] [ text "Game notes" ]
         , p []
             [ text "This game was build as part of "
-            , a [ href "https://thougthbot.com" ] [ text "thoughtbot" ]
+            , a [ href "https://thoughtbot.com" ] [ text "thoughtbot" ]
             , text "'s annual holiday hackathon. Visit "
             , a [ href "https://github.com/christoomey/elm-reaction" ] [ text "the repo" ]
             , text " to view the code (check out src/Main.elm for most of the action). "
