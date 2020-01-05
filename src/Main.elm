@@ -2,8 +2,8 @@ module Main exposing (main)
 
 import Browser
 import Browser.Events exposing (onAnimationFrameDelta)
-import Html exposing (Html, button, div, h3, span, text)
-import Html.Attributes exposing (class, style)
+import Html exposing (Html, a, button, details, div, h3, li, p, span, strong, summary, text, ul)
+import Html.Attributes exposing (attribute, class, href, style)
 import Html.Events exposing (onClick)
 import List.Extra as List
 
@@ -77,7 +77,80 @@ view : Model -> Html Msg
 view model =
     div []
         [ controls model
+        , gameSummary
         , div [ class "board" ] <| renderableBoard model
+        ]
+
+
+gameSummary : Html Msg
+gameSummary =
+    details [ class "game-summary", attribute "open" "" ]
+        [ summary [] [ text "Game notes" ]
+        , p []
+            [ text "This game was build as part of "
+            , a [ href "https://thougthbot.com" ] [ text "thoughtbot" ]
+            , text "'s annual holiday hackathon. Visit "
+            , a [ href "https://github.com/christoomey/elm-reaction" ] [ text "the repo" ]
+            , text " to view the code (check out src/Main.elm for most of the action). "
+            , text "The game was coded by "
+            , a [ href "https://ctoomey.com" ] [ text "Chris Toomey" ]
+            , text " and "
+            , a [ href "https://twitter.com/gnfisher" ] [ text "Greg Fisher" ]
+            , text ", with all artwork provided by the incomparable "
+            , a [ href "https://twitter.com/matthewmsumner" ] [ text "Matt Sumner" ]
+            , text "."
+            ]
+        , p []
+            [ text "The game itself is fun to watch, but the functionality implemented thus far isn't too fancy. "
+            , text "To play, click on any of the 'interactor' cells which will start the fun. The goal is to clear the board "
+            , text "in as few clicks as possible. You'll know you're done when the "
+            , strong [] [ text "Playing" ]
+            , text " text in the top left changes to "
+            , strong [] [ text "COMPLETE." ]
+            ]
+        , p [] [ strong [] [ text "Cell types:" ] ]
+        , ul []
+            [ li []
+                [ span [ class "interactor-example interactor-one" ] []
+                , strong [] [ text "One Core " ]
+                , text " - click to increase to Two Core"
+                ]
+            , li []
+                [ span [ class "interactor-example interactor-two" ] []
+                , strong [] [ text "Two Core " ]
+                , text " - click to increase to Three Core"
+                ]
+            , li []
+                [ span [ class "interactor-example interactor-three" ] []
+                , strong [] [ text "Three Core " ]
+                , text " - click to increase to Four Core"
+                ]
+            , li []
+                [ span [ class "interactor-example interactor-four" ] []
+                , strong [] [ text "Four Core " ]
+                , text " - click to explode, sending particles flying in each direction"
+                ]
+            , li []
+                [ span [ class "interactor-example interactor-reverse" ] []
+                , strong [] [ text "Reverse " ]
+                , text " - (not clickable) reverses the direction of a particle that lands on it"
+                ]
+            , li []
+                [ span [ class "interactor-example interactor-arrow-right" ] []
+                , strong [] [ text "Arrow " ]
+                , text " - (not clickable) forces a particle to switch to the arrow's direction"
+                ]
+            , li []
+                [ span [ class "interactor-example interactor-energizer" ] []
+                , strong [] [ text "Energizer " ]
+                , text " - (not clickable) sends out two additional particles in the lateral directions"
+                ]
+            , li []
+                [ span [ class "interactor-example interactor-black-hole" ] []
+                , strong [] [ text "Black hole " ]
+                , text " - (not clickable) swallows any particle that collides with it"
+                ]
+            ]
         ]
 
 

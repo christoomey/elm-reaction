@@ -1,5 +1,5 @@
 $cell-size: 150px;
-$max-width: 60rem;
+$max-width: 40rem;
 
 .controls  {
   max-width: $max-width;
@@ -15,6 +15,12 @@ $max-width: 60rem;
   @media (max-width: 500px) {
     flex-direction: column
   }
+}
+
+.game-summary {
+  max-width: $max-width;
+  margin: 0 auto;
+  margin-bottom: 1em;
 }
 
 .board {
@@ -43,60 +49,69 @@ $max-width: 60rem;
   position: relative;
   border: 1px solid #bbb;
 
-  &.interactor-one {
-    background: url(./assets/images/oneCore.gif) no-repeat center center;
-    background-size: cover;
-  }
+}
 
-  &.interactor-two {
-    background: url(./assets/images/twoCore.gif) no-repeat center center;
-    background-size: cover;
-  }
+.interactor-example {
+  display: inline-block;
+  height: 1.5em;
+  width: 1.5em;
+  margin-right: 0.5em;
+  vertical-align: middle;
+}
 
-  &.interactor-three {
-    background: url(./assets/images/threeCore.gif) no-repeat center center;
-    background-size: cover;
-  }
+.interactor-one {
+  background: url(./assets/images/oneCore.gif) no-repeat center center;
+  background-size: cover;
+}
 
-  &.interactor-four {
-    background: url(./assets/images/fourCore.gif) no-repeat center center;
-    background-size: cover;
-  }
+.interactor-two {
+  background: url(./assets/images/twoCore.gif) no-repeat center center;
+  background-size: cover;
+}
 
-  &.interactor-reverse {
-    background: url(./assets/images/reverse.gif) no-repeat center center;
-    background-size: cover;
-  }
+.interactor-three {
+  background: url(./assets/images/threeCore.gif) no-repeat center center;
+  background-size: cover;
+}
 
-  &.interactor-arrow-left, &.interactor-arrow-right, &.interactor-arrow-left, &.interactor-arrow-up  {
-    background: url(./assets/images/arrowLeft.gif) no-repeat center center;
-    background-size: cover;
-  }
+.interactor-four {
+  background: url(./assets/images/fourCore.gif) no-repeat center center;
+  background-size: cover;
+}
 
-  &.interactor-arrow-down {
-    background: url(./assets/images/arrowDown.gif) no-repeat center center;
-    background-size: cover;
-  }
+.interactor-reverse {
+  background: url(./assets/images/reverse.gif) no-repeat center center;
+  background-size: cover;
+}
 
-  &.interactor-arrow-up {
-    background: url(./assets/images/arrowUp.gif) no-repeat center center;
-    background-size: cover;
-  }
+.interactor-arrow-left, .interactor-arrow-right, .interactor-arrow-left, .interactor-arrow-up  {
+  background: url(./assets/images/arrowLeft.gif) no-repeat center center;
+  background-size: cover;
+}
 
-  &.interactor-arrow-right {
-    background: url(./assets/images/arrowRight.gif) no-repeat center center;
-    background-size: cover;
-  }
+.interactor-arrow-down {
+  background: url(./assets/images/arrowDown.gif) no-repeat center center;
+  background-size: cover;
+}
 
-  &.interactor-energizer {
-    background: url(./assets/images/energizer.gif) no-repeat center center;
-    background-size: cover;
-  }
+.interactor-arrow-up {
+  background: url(./assets/images/arrowUp.gif) no-repeat center center;
+  background-size: cover;
+}
 
-  &.interactor-black-hole {
-    background: url(./assets/images/blackHole.gif) no-repeat center center;
-    background-size: cover;
-  }
+.interactor-arrow-right {
+  background: url(./assets/images/arrowRight.gif) no-repeat center center;
+  background-size: cover;
+}
+
+.interactor-energizer {
+  background: url(./assets/images/energizer.gif) no-repeat center center;
+  background-size: cover;
+}
+
+.interactor-black-hole {
+  background: url(./assets/images/blackHole.gif) no-repeat center center;
+  background-size: cover;
 }
 
 .projectile-up, .projectile-down, .projectile-left, .projectile-right {
