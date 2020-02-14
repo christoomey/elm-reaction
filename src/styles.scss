@@ -114,6 +114,11 @@ $max-width: 40rem;
   background-size: cover;
 }
 
+.interactor-portal {
+  background: url(./assets/images/portal.gif) no-repeat center center;
+  background-size: cover;
+}
+
 .projectile-up, .projectile-down, .projectile-left, .projectile-right {
   background: url(./assets/images/projectile.gif) no-repeat center center;
   background-size: contain;
