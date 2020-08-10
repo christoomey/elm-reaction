@@ -36,12 +36,8 @@ type CoreSize
     | Four
 
 
-type CoreDetails
-    = CoreDetails CoreSize Position
-
-
 type Interactor
-    = Core CoreDetails
+    = Core CoreSize Position
     | Reverse Position
     | Arrow Direction Position
     | Energizer Position
@@ -187,7 +183,7 @@ isComplete board =
 isClickable : Interactor -> Bool
 isClickable interactor =
     case interactor of
-        Core _ ->
+        Core _ _ ->
             True
 
         _ ->
@@ -263,7 +259,7 @@ coreSizeToString coreSize =
 interactorClass : Interactor -> Html.Attribute Msg
 interactorClass interactor =
     case interactor of
-        Core (CoreDetails size _) ->
+        Core size _ ->
             class <| "cell interactor-" ++ coreSizeToString size
 
         Reverse _ ->
@@ -321,31 +317,31 @@ directionToString direction =
 initialBoard : Board
 initialBoard =
     { interactors =
-        [ Core <| CoreDetails Three ( 0, 0 )
+        [ Core Three ( 0, 0 )
         , Arrow Down ( 1, 2 )
         , BlackHole ( 6, 5 )
-        , Core <| CoreDetails Two ( 3, 7 )
+        , Core Two ( 3, 7 )
         , Reverse ( 4, 1 )
-        , Core <| CoreDetails Three ( 7, 6 )
+        , Core Three ( 7, 6 )
         , Arrow Up ( 7, 6 )
-        , Core <| CoreDetails Two ( 6, 1 )
+        , Core Two ( 6, 1 )
         , Reverse ( 0, 7 )
-        , Core <| CoreDetails Four ( 2, 4 )
-        , Core <| CoreDetails One ( 4, 7 )
+        , Core Four ( 2, 4 )
+        , Core One ( 4, 7 )
         , Energizer ( 3, 6 )
-        , Core <| CoreDetails Four ( 0, 4 )
-        , Core <| CoreDetails Four ( 2, 6 )
+        , Core Four ( 0, 4 )
+        , Core Four ( 2, 6 )
         , Arrow Right ( 3, 2 )
         , Arrow Right ( 5, 4 )
         , Arrow Up ( 5, 7 )
-        , Core <| CoreDetails Three ( 6, 3 )
-        , Core <| CoreDetails Three ( 1, 4 )
-        , Core <| CoreDetails Three ( 2, 5 )
+        , Core Three ( 6, 3 )
+        , Core Three ( 1, 4 )
+        , Core Three ( 2, 5 )
         , Arrow Right ( 7, 4 )
         , Arrow Up ( 5, 7 )
-        , Core <| CoreDetails Four ( 4, 4 )
+        , Core Four ( 4, 4 )
         , Arrow Right ( 6, 0 )
-        , Core <| CoreDetails Four ( 7, 2 )
+        , Core Four ( 7, 2 )
         , Arrow Down ( 2, 0 )
         , Portal ( 5, 2 ) ( 0, 6 )
         ]
@@ -385,7 +381,7 @@ interactorIsAtPosition ( x, y ) interactor =
 getInteractorPosition : Interactor -> Position
 getInteractorPosition interactor =
     case interactor of
-        Core (CoreDetails _ pos) ->
+        Core _ pos ->
             pos
 
         Arrow _ pos ->
@@ -476,16 +472,16 @@ interact : Interactor -> Maybe Projectile -> CellState
 interact interactor maybeProjectile =
     if shouldInteract maybeProjectile then
         case interactor of
-            Core (CoreDetails One position) ->
-                ( Just <| Core (CoreDetails Two position), [] )
+            Core One position ->
+                ( Just <| Core Two position, [] )
 
-            Core (CoreDetails Two position) ->
-                ( Just <| Core (CoreDetails Three position), [] )
+            Core Two position ->
+                ( Just <| Core Three position, [] )
 
-            Core (CoreDetails Three position) ->
-                ( Just <| Core (CoreDetails Four position), [] )
+            Core Three position ->
+                ( Just <| Core Four position, [] )
 
-            Core (CoreDetails Four position) ->
+            Core Four position ->
                 ( Nothing, List.map (\dir -> Projectile dir position 0) [ Up, Down, Left, Right ] )
 
             Reverse position ->
